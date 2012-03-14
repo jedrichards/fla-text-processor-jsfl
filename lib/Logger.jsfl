@@ -8,16 +8,16 @@ var Logger =
 	logToIDE : true,
 	logDir : "",
 	logFile : "",
-	processID : "",
+	jobID : "",
 	scriptName : "",
 
-	init : function(p_logToFile,p_logToIDE,p_logDir,p_processID,p_scriptName)
+	init : function(p_logToFile,p_logToIDE,p_logDir,p_jobID,p_scriptName)
 	{
 		this.logToFile = p_logToFile;
 		this.logToIDE = p_logToIDE;
 		this.logDir = p_logDir;
-		this.logFile = logDir+"/log";
-		this.processID = p_processID;
+		this.logFile = logDir+"log";
+		this.jobID = p_jobID;
 		this.scriptName = p_scriptName;
 
 		if ( this.logToIDE )
@@ -28,9 +28,9 @@ var Logger =
 
 	log : function(p_text,p_type)
 	{
-		var logString = this.processID+" "+this.scriptName+" "+this.getTimeStamp();
+		var logString = "job"+this.jobID+" "+this.scriptName+" "+this.getTimeStamp();
 
-		if ( p_type === null || p_type === undefined || p_type === "" )
+		if ( !p_type || p_type === "" )
 		{
 			logString = this.SYSTEM+" "+logString;
 		}
@@ -46,10 +46,7 @@ var Logger =
 			fl.outputPanel.trace(logString);
 		}
 
-		if ( this.logToFile )
-		{
-			FLfile.write(this.logFile,logString+"\n","append");
-		}
+		FLfile.write(this.logFile,logString+"\n","append");
 	},
 
 	getTimeStamp : function()
