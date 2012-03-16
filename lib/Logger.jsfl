@@ -6,17 +6,15 @@ var Logger =
 	
 	logToFile : true,
 	logToIDE : true,
-	logDir : "",
-	logFile : "",
+	logFilePath : "",
 	jobID : "",
 	scriptName : "",
 
-	init : function(p_logToFile,p_logToIDE,p_logDir,p_jobID,p_scriptName)
+	init : function(p_logToFile,p_logToIDE,p_logFilePath,p_jobID,p_scriptName)
 	{
 		this.logToFile = p_logToFile;
 		this.logToIDE = p_logToIDE;
-		this.logDir = p_logDir;
-		this.logFile = logDir+"log";
+		this.logFilePath = p_logFilePath;
 		this.jobID = p_jobID;
 		this.scriptName = p_scriptName;
 
@@ -26,27 +24,27 @@ var Logger =
 		}
 	},
 
-	log : function(p_text,p_type)
+	log : function(p_logItem,p_type)
 	{
-		var logString = "job"+this.jobID+" "+this.scriptName+" "+this.getTimeStamp();
+		var output = this.jobID+" "+this.scriptName+" "+this.getTimeStamp();
 
 		if ( !p_type || p_type === "" )
 		{
-			logString = this.SYSTEM+" "+logString;
+			output = this.SYSTEM+" "+output;
 		}
 		else
 		{
-			logString = p_type+" "+logString;
+			output = p_type+" "+output;
 		}
 
-		logString = logString+" "+p_text;
+		output = output+" > "+p_logItem;
 
 		if ( this.logToIDE )
 		{
-			fl.outputPanel.trace(logString);
+			fl.outputPanel.trace(output);
 		}
 
-		FLfile.write(this.logFile,logString+"\n","append");
+		FLfile.write(this.logFilePath,output+"\n","append");
 	},
 
 	getTimeStamp : function()
