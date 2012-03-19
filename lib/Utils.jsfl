@@ -154,7 +154,16 @@ var Utils =
 		return true;
 	},
 
-	isItemInLib : function(p_name,p_lib)
+	/**
+	 * Determine if an item is present in a FLA library by passing in all or part of its name path.
+	 *
+	 * @param p_namePart Part or all of its name path, e.g. passing in "tf12" would still return
+	 *                   true if the item was present in the library at "folder1/folder2/tf12".
+	 * @param p_lib A reference to the library object to search.
+	 *
+	 * returns Boolean.
+	 */
+	isItemInLib : function(p_namePart,p_lib)
 	{
 		var numItems = p_lib.items.length;
 
@@ -162,7 +171,7 @@ var Utils =
 		{
 			var item = p_lib.items[i];
 
-			if ( item.name.indexOf(p_name) > -1 )
+			if ( item.name.indexOf(p_namePart) > -1 )
 			{
 				return true;
 			}
@@ -171,27 +180,154 @@ var Utils =
 		return false;
 	},
 
-	tidyLibrary : function(p_lib,p_folder)
+	/**
+	 * Tidy the library by moving library items to descriptively named folders and then removing
+	 * any empty folders.
+	 *
+	 * @param p_lib A reference to the library object to tidy.
+	 *
+	 * returns Void.
+	 */
+	tidyLibrary : function(p_lib)
 	{
-		if ( !p_lib.itemExists(p_folder) )
+		var mcFolderName = "movieclips";
+		var textMCFolderName = "movieclips-text";
+		var graphicsFolderName = "graphics";
+		var bitmapsFolderName = "bitmaps";
+		var componentsFolderName = "components";
+		var buttonsFolderName = "buttons";
+		var otherFolderName = "other";
+
+		p_lib.newFolder(mcFolderName);
+		p_lib.newFolder(textMCFolderName);
+		p_lib.newFolder(graphicsFolderName);
+		p_lib.newFolder(bitmapsFolderName);
+		p_lib.newFolder(componentsFolderName);
+		p_lib.newFolder(buttonsFolderName);
+		p_lib.newFolder(otherFolderName);
+
+		for ( var i=0; i<p_lib.items.length; i++ )
 		{
-			p_lib.newFolder(p_folder);
+			var item = p_lib.items[i];
+			var destinationFolder;
+
+			switch ( p_lib.getItemType(item.name) )
+			{
+				case this.MOVIECLIP_LIB_ITEM:
+					if ( this.isTranslatableLibPathName(item.name) )
+					{
+						 destinationFolder = textMCFolderName;
+					}
+					else
+					{
+						destinationFolder = mcFolderName;
+					}
+					break;
+				case this.GRAPHIC_LIB_ITEM:
+					destinationFolder = graphicsFolderName;
+					break;
+				case this.BITMAP_LIB_ITEM:
+					destinationFolder = bitmapsFolderName;
+					break;
+				case this.COMPONENT_LIB_ITEM:
+				case this.COMPILED_CLIP_LIB_ITEM:
+					destinationFolder = componentsFolderName;
+					break;
+				case this.BUTTON_LIB_ITEM:
+					destinationFolder = buttonsFolderName;
+					break;
+				case this.FOLDER_LIB_ITEM:
+					break;
+				default:
+					destinationFolder = otherFolderName;
+					break;
+			}
+
+			p_lib.moveToFolder(destinationFolder,item.name,true);
 		}
+
+		this.deleteEmptyLibFolders(p_lib);
+	},
+
+	/**
+	 * Recursively remove all empty folders from the library no matter how deeply nested.
+	 *
+	 * @param p_lib A reference to the library object to tidy.
+	 *
+	 * returns Void.
+	 */
+	deleteEmptyLibFolders : function(p_lib)
+	{
+		while ( this.libHasEmptyFolders(p_lib) )
+		{
+			for ( var i=0; i<p_lib.items.length; i++ )
+			{
+				var item = p_lib.items[i];
+
+				if ( p_lib.getItemType(item.name) == this.FOLDER_LIB_ITEM )
+				{
+					if ( this.isLibFolderEmpty(p_lib,item.name) )
+					{
+						p_lib.deleteItem(item.name);
+					}
+				}
+			}
+		}
+	},
+
+	/**
+	 * Determine if a library folder has contents.
+	 *
+	 * @param p_lib A reference to the library object.
+	 * @param p_folderName The folder path to search.
+	 *
+	 * returns Boolean.
+	 */
+	isLibFolderEmpty : function(p_lib,p_folderName)
+	{
+		var count = 0;
 
 		for ( var i=0; i<p_lib.items.length; i++ )
 		{
 			var item = p_lib.items[i];
 
-			if ( this.isTranslatableLibPathName(item.name) && item.name.indexOf(p_folder) == -1 )
+			if ( item.name.indexOf(p_folderName) > -1 )
 			{
-				p_lib.moveToFolder(p_folder,item.name,true);
+				count++;
+			}
+
+			if ( count > 1 )
+			{
+				break;
 			}
 		}
+
+		return count < 2;
 	},
 
-	isFolderEmpty : function(p_lib,p_folderName)
+	/**
+	 * Determine if the library contains any empty folders at all.
+	 *
+	 * @param p_lib A reference to the library object to search.
+	 *
+	 * returns Boolean.
+	 */
+	libHasEmptyFolders : function(p_lib)
 	{
+		for ( var i=0; i<p_lib.items.length; i++ )
+		{
+			var item = p_lib.items[i];
 
+			if ( p_lib.getItemType(item.name) == this.FOLDER_LIB_ITEM )
+			{
+				if ( this.isLibFolderEmpty(p_lib,item.name) )
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	},
 
 	/**
@@ -241,6 +377,50 @@ var Utils =
 		else
 		{
 			return p_num;
+		}
+	},
+
+	getAllTranslatableTextFields : function(p_doc)
+	{
+		var data = [];
+		var results = fl.findObjectInDocByType(this.TEXTFIELD_TIMELINE_ELEMENT,p_doc);
+
+		for ( var i=0; i<results.length; i++ )
+		{
+			var o = results[i];
+
+			var element = o.obj;
+			var parent = o.parent;
+
+			// Skip any dynamic or input TextFields, these are not supported.
+
+			if ( element.textType == this.STATIC_TEXTFIELD && parent != undefined && this.isTranslatableMovieClip(parent.obj.libraryItem,p_doc.library) )
+			{
+				data.push(o);
+			}
+		}
+
+		return data;
+	},
+
+	/**
+	 * Attempts to load an FLA and logs an error if the FLA is not found.
+	 *
+	 * @param p_flaPath Full file path to the FLA.
+	 *
+	 * returns Boolean success value.
+	 */
+	loadFLA : function(p_flaPath)
+	{
+		if ( !FLfile.exists(p_flaPath) )
+		{
+			Logger.log("Error, target FLA not found",Logger.CRITICAL);
+
+			return null;
+		}
+		else
+		{
+			return fl.openDocument(p_flaPath);
 		}
 	}
 };

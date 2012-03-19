@@ -18,6 +18,8 @@
  *
  * TODO:
  *
+ * - Process should be first fix invalid TextFields *then* compile a list of fields to translate
+ *   rather than both these operations happening in the same function.
  * - Handle dynamic/input TextFields more gracefully.
  * - At the moment MovieClips in the library with a zero use count are ignored even if they
  *   are being exported for ActionScript.
@@ -36,7 +38,7 @@ var config =
 	logToIDE : true, // Whether to log to the IDE's output panel
 	logFilePath : "", // Log file path
 	lockFilePath : "", // Lock file path
-	targetFLAFilePath : "", // Master FLA file path
+	flaFilePath : "", // Master FLA file path
 	outputXMLFilePath : "", // XML file path to write
 	outputFLAFilePath : "", // FLA file path to write
 	libDir : "" // Static JSFL library directory
@@ -54,7 +56,7 @@ var doc;
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.targetFLAFilePath == "" ) config.targetFLAFilePath = scriptDir+"test.fla";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test.fla";
 
 // Lock it
 
@@ -105,7 +107,7 @@ function initLogger()
  */
 function loadFLA()
 {
-	if ( !FLfile.exists(config.targetFLAFilePath) )
+	if ( !FLfile.exists(config.flaFilePath) )
 	{
 		Logger.log("Error, target FLA not found",Logger.CRITICAL);
 
@@ -113,7 +115,7 @@ function loadFLA()
 	}
 	else
 	{
-		doc = fl.openDocument(config.targetFLAFilePath);
+		doc = fl.openDocument(config.flaFilePath);
 
 		return true;
 	}
@@ -198,8 +200,11 @@ function parseFLA()
 
 			fixInvalidItem(invalidItems[i],lib,doc,"tf"+idNum);
 		}
-			pushTranslationObjects(data,invalidItems);
-		}
+		
+		pushTranslationObjects(data,invalidItems);
+	}
+
+	Utils.tidyLibrary(lib);
 
 	return data;
 }
@@ -330,7 +335,7 @@ function fixInvalidItem(p_tfObject,p_lib,p_doc,p_id)
  * Main processing function for this JSFL script. Calls the various utility methods and reports
  * errors.
  *
- * returns Void.
+ * returns Boolean indicating success or failure.
  */
 function process()
 {
@@ -422,7 +427,7 @@ if ( success )
 }
 else
 {
-	Logger.log("Processing completed with errors",Logger.WARNING);
+	Logger.log("Errors encountered, operation failed",Logger.WARNING);
 }
 
 // Unlock and exit

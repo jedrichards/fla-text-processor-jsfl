@@ -1,0 +1,12 @@
+<root lang="fr_FR">
+  <items>
+    <item id="tf5" font="Georgia" size="24" bold="false" italic="false">Howdy, je me présente à plusieurs endroits.</item>
+    <item id="tf1" font="Georgia" size="24" bold="false" italic="false">Bonjour tout le monde!</item>
+    <item id="tf2" font="Georgia" size="24" bold="false" italic="false">Quoi de neuf?</item>
+    <item id="tf4" font="Georgia" size="14" bold="false" italic="false">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</item>
+    <item id="tf7" font="Georgia" size="14" bold="false" italic="false">Bonjour, je suis statique TextField 2 sur 2 assis sur un calendrier MovieClip!</item>
+    <item id="tf8" font="Georgia" size="14" bold="false" italic="false">Bonjour, je suis statique TextField 1 sur 2 assis sur un calendrier MovieClip!</item>
+    <item id="tf9" font="Georgia" size="14" bold="false" italic="false">Bonjour, Je suis un TextField statique assis sur un calendrier graphique quelque part!</item>
+    <item id="tf10" font="Georgia" size="14" bold="false" italic="false">Bonjour, Je suis un TextField statique assis directement sur la scène principale!</item>
+  </items>
+</root>
