@@ -1,3 +1,11 @@
+/**
+ * Logger
+ *
+ * Logs debug information to a log file and/or the Flash IDE's output panel.
+ *
+ * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
+ */
+
 var Logger =
 {
 	SYSTEM : "[SYST]",
@@ -10,6 +18,17 @@ var Logger =
 	jobID : "",
 	scriptName : "",
 
+	/**
+	 * Logger needs to be initialised before use.
+	 *
+	 * @param p_logToFile Boolean value, whether to log ouput to a file.
+	 * @param p_logToIDE Boolean valuem whether to log outout to the IDE.
+	 * @param p_logFilePath Full file path to the desired log file location.
+	 * @param p_jobID A reference number to the current job ID, supplied to the main script by PHP.
+	 * @param p_scriptName The filename of the currently running script.
+	 *
+	 * returns Void.
+	 */
 	init : function(p_logToFile,p_logToIDE,p_logFilePath,p_jobID,p_scriptName)
 	{
 		this.logToFile = p_logToFile;
@@ -24,9 +43,17 @@ var Logger =
 		}
 	},
 
+	/**
+	 * Log a message.
+	 *
+	 * @param p_logItem String to log.
+	 * @param p_type String specifying the type of message, i.e. SYSTEM, WARNING or CRITICAL.
+	 *
+	 * returns Void.
+	 */
 	log : function(p_logItem,p_type)
 	{
-		var output = this.jobID+" "+this.scriptName+" "+this.getTimeStamp();
+		var output = this.jobID+" "+this.scriptName+" "+Utils.getTimeStamp();
 
 		if ( !p_type || p_type === "" )
 		{
@@ -45,28 +72,5 @@ var Logger =
 		}
 
 		FLfile.write(this.logFilePath,output+"\n","append");
-	},
-
-	getTimeStamp : function()
-	{
-		var now = new Date();
-
-		var timeStamp = "["+this.zeroPad(now.getDate())+"/"+this.zeroPad(now.getMonth()+1)+"/"+now.getFullYear()+":";
-
-		timeStamp += this.zeroPad(now.getHours())+":"+this.zeroPad(now.getMinutes()+1)+":"+this.zeroPad(now.getSeconds()+1)+"]";
-
-		return timeStamp;
-	},
-	
-	zeroPad : function(p_num)
-	{
-		if ( p_num < 10 )
-		{
-			return "0"+p_num;
-		}
-		else
-		{
-			return p_num;
-		}
 	}
 };
