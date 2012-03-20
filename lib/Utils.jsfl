@@ -182,14 +182,18 @@ var Utils =
 
 	/**
 	 * Tidy the library by moving library items to descriptively named folders and then removing
-	 * any empty folders.
+	 * any empty folders. MovieClips with a zero use count that aren't exported for AS are also
+	 * removed.
 	 *
 	 * @param p_lib A reference to the library object to tidy.
+	 * @param p_doc A reference to the associated FLA document.
 	 *
 	 * returns Void.
 	 */
-	tidyLibrary : function(p_lib)
+	tidyLibrary : function(p_lib,p_doc)
 	{
+		// Create folders:
+
 		var mcFolderName = "movieclips";
 		var textMCFolderName = "movieclips-text";
 		var graphicsFolderName = "graphics";
@@ -206,9 +210,15 @@ var Utils =
 		p_lib.newFolder(buttonsFolderName);
 		p_lib.newFolder(otherFolderName);
 
-		for ( var i=0; i<p_lib.items.length; i++ )
+		// Move items to folders depending on their item type:
+
+		var i;
+		var item;
+
+		for ( i=0; i<p_lib.items.length; i++ )
 		{
-			var item = p_lib.items[i];
+			item = p_lib.items[i];
+
 			var destinationFolder;
 
 			switch ( p_lib.getItemType(item.name) )
@@ -246,7 +256,57 @@ var Utils =
 			p_lib.moveToFolder(destinationFolder,item.name,true);
 		}
 
+		// Clean up any empty folders:
+
 		this.deleteEmptyLibFolders(p_lib);
+
+		// Clean up any MovieClips that have a zero use count and aren't exported for AS:
+
+		//this.deleteUnusedMovieClips(p_lib,p_doc);
+	},
+
+	deleteUnusedMovieClips : function(p_lib,p_doc)
+	{
+		var namesForDeletion = [];
+		var i;
+
+		for ( i=0; i<p_lib.items.length; i++ )
+		{
+			item = p_lib.items[i];
+
+			if ( p_lib.getItemType(item.name) == this.MOVIECLIP_LIB_ITEM )
+			{
+				if ( !item.linkageExportForAS )
+				{
+					if ( !this.isItemOnStage(item,p_doc) )
+					{
+						namesForDeletion.push(item.name);
+					}
+				}
+			}
+		}
+
+		for ( i=0; i<namesForDeletion.length; i++ )
+		{
+			p_lib.deleteItem(namesForDeletion[i]);
+		}
+	},
+
+	isItemOnStage : function(p_item,p_doc)
+	{
+		var type = p_doc.library.getItemType(p_item.name);
+
+		var results = fl.findObjectInDocByType(this.INSTANCE_TIMELINE_ELEMENT,p_doc);
+		
+		for ( var i=0; i<results.length; i++ )
+		{
+			if ( p_item.name == results[i].obj.libraryItem.name )
+			{
+				return true;
+			}
+		}
+
+		return false;
 	},
 
 	/**
@@ -496,6 +556,29 @@ var Utils =
 		else
 		{
 			return null;
+		}
+	},
+
+	/**
+	 * Export an FLA as a SWF.
+	 *
+	 * @param p_swfFilePath File path to write the SWF.
+	 * @param p_doc Reference to the FLA document to export.
+	 *
+	 * returns Boolean value indicating success.
+	 */
+	exportSWF : function(p_swfFilePath,p_doc)
+	{
+		p_doc.exportSWF(p_swfFilePath,true);
+
+		if ( FLfile.exists(p_swfFilePath) )
+		{
+			return true;
+		}
+		else
+		{
+
+			return false;
 		}
 	}
 };

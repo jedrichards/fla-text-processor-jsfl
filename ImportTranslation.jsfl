@@ -183,8 +183,9 @@ function go()
 	var textFields;
 	var xml;
 	var translationData;
-	var importSuccess;
-	var flaSaved;
+
+	var flaSaved = false;
+	var writeError = false;
 
 	doc = Utils.loadFLA(config.flaFilePath);
 
@@ -199,17 +200,16 @@ function go()
 	}
 	catch (p_error)
 	{
-		Logger.log("Error gathering translatable TextFields from FLA. "+p_error);
+		Logger.log("Error gathering translatable TextFields from FLA. "+p_error,Logger.CRITICAL);
 
 		return false;
 	}
-	
 
 	Logger.log("Found "+textFields.length+" translatable TextFields in the FLA");
 
 	if ( textFields.length == 0 )
 	{
-		Logger.log("No translatable TextFields found in the FLA",Logger.WARNING);
+		Logger.log("No translatable TextFields found in the FLA",Logger.CRITICAL);
 
 		return false;
 	}
@@ -221,27 +221,31 @@ function go()
 		return false;
 	}
 
-	translationData = parseXML(xml);
-
-	if ( !translationData )
+	try
 	{
+		translationData = parseXML(xml);
+	}
+	catch (p_error)
+	{
+		Logger.log("Error parsing the XML for translation data. "+p_error);
+	}
+
+	if ( translationData.items.length == 0 )
+	{
+		Logger.log("No translation data found in the XML",Logger.CRITICAL);
+
 		return false;
 	}
 
-	importSuccess = false;
-
 	try
 	{
-		importSuccess = importData(textFields,translationData);
+		importData(textFields,translationData);
 	}
 	catch (p_error)
 	{
 		Logger.log("Error importing translation data into FLA. "+p_error,Logger.WARNING);
-	}
-	
-	if ( !importSuccess )
-	{
-		Logger.log("Warning, problems encountered importing translation data into FLA",Logger.WARNING);
+
+		return false;
 	}
 
 	flaSaved = fl.saveDocument(doc,config.outputFLAFilePath);
@@ -254,12 +258,12 @@ function go()
 	{
 		Logger.log("Error, can't save FLA",Logger.WARNING);
 
-		return false;
+		writeError = true;
 	}
 
-	doc.exportSWF(config.outputSWFFilePath,true);
+	var swfSaved = Utils.exportSWF(config.outputSWFFilePath,doc);
 
-	if ( FLfile.exists(config.outputSWFFilePath) )
+	if ( swfSaved )
 	{
 		Logger.log("SWF written to disk");
 	}
@@ -267,17 +271,19 @@ function go()
 	{
 		Logger.log("Error, can't save SWF",Logger.WARNING);
 
-		return false;
+		writeError = true;
 	}
 
 	fl.closeAll(false);
 
-	if ( !importSuccess )
+	if ( writeError )
 	{
 		return false;
 	}
-
-	return true;
+	else
+	{
+		return true;
+	}
 }
 
 // Start

@@ -3,7 +3,7 @@
  *
  * Takes an FLA as input and generates an XML file containing the text content ready for
  * translation. Static TextFields in a properly prepared FLA should each be wrapped in a MovieClip
- * named "tf1", "tf2" ... "tfn" in the library. The "tfn" library name becomes the text contents ID
+ * named "tf1", "tf2" ... "tfn" in the library. The "tfn" library name becomes the text content's ID
  * in the XML file.
  * 
  * If any static TextFields are found in the FLA placed directly on the root timeline or on a
@@ -26,6 +26,8 @@
  * - At the moment MovieClips in the library with a zero use count are ignored even if they
  *   are being exported for ActionScript.
  * - Test with lots of banners from the wild.
+ * - Lock file should only be deleted by JSFL not created.
+ * - Tidying unused MovieClips not working?
  *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */
@@ -43,6 +45,7 @@ var config =
 	flaFilePath : "", // Master FLA file path
 	outputXMLFilePath : "", // XML file path to write
 	outputFLAFilePath : "", // FLA file path to write
+	outputSWFFilePath : "", // SWF file path to write
 	libDir : "" // Static JSFL library directory
 }
 
@@ -76,6 +79,7 @@ var guid = Utils.guid();
 
 if ( config.outputXMLFilePath === "" ) config.outputXMLFilePath = scriptDir+"output/"+guid+".xml";
 if ( config.outputFLAFilePath === "" ) config.outputFLAFilePath = scriptDir+"output/"+guid+".fla";
+if ( config.outputSWFFilePath === "" ) config.outputSWFFilePath = scriptDir+"output/"+guid+".swf";
 
 // Define methods
 
@@ -132,6 +136,11 @@ function loadFLA()
  */
 function doProcessAndExport()
 {
+	// 1. Temporarily add MovieClips to the stage that have zero use count but are exported for AS
+	// 2. Fix TextFields that are not wrapped in a proper translatable MovieClip.
+	// 3. Sweep FLA again, adding all formatted wrapped TextFields to a master array
+	// 4. Remove temporarily added MovieClips
+
 	var data = [];
 	var validItems = [];
 	var invalidItems = [];
@@ -206,8 +215,6 @@ function doProcessAndExport()
 		pushTranslationObjects(data,invalidItems);
 	}
 
-	Utils.tidyLibrary(lib);
-
 	return data;
 }
 
@@ -246,9 +253,9 @@ function pushTranslationObjects(p_data,p_tfObjects)
 
 /**
  * Generate an E4X XML object from a data array in the format returned from the
- * processForTranslation method.
+ * doProcessAndExport method.
  *
- * @param Data array from processForTranslation.
+ * @param Data array from doProcessAndExport.
  *
  * returns XML object.
  */
@@ -351,6 +358,8 @@ function go()
 		return false;
 	}
 
+	Utils.tidyLibrary(doc.library,doc);
+
 	try
 	{
 		data = doProcessAndExport();
@@ -361,6 +370,8 @@ function go()
 
 		return false;
 	}
+
+	Utils.tidyLibrary(doc.library,doc);
 
 	Logger.log("Generated "+data.length+" items for translation, converting to XML ...");
 
@@ -399,6 +410,19 @@ function go()
 	else
 	{
 		Logger.log("Error, can't save FLA",Logger.WARNING);
+
+		writeError = true;
+	}
+
+	var swfSaved = Utils.exportSWF(config.outputSWFFilePath,doc);
+
+	if ( swfSaved )
+	{
+		Logger.log("SWF written to disk");
+	}
+	else
+	{
+		Logger.log("Error, can't save SWF",Logger.WARNING);
 
 		writeError = true;
 	}
