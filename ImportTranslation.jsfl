@@ -22,6 +22,7 @@ var config =
 	lockFilePath : "", // Lock file path
 	flaFilePath : "", // Master FLA file path
 	outputFLAFilePath : "", // FLA file path to write
+	outputSWFFilePath : "", // SWF file path to write
 	xmlFilePath : "", // XML file path to import
 	libDir : "" // Static JSFL library directory
 }
@@ -38,8 +39,9 @@ var doc;
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test.fla";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"import-test.fla";
 if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"test.xml";
+
 
 // Lock it
 
@@ -56,30 +58,118 @@ fl.runScript(fl.configURI+"JavaScript/ObjectFindAndSelect.jsfl");
 var guid = Utils.guid();
 
 if ( config.outputFLAFilePath === "" ) config.outputFLAFilePath = scriptDir+"output/"+guid+".fla";
+if ( config.outputSWFFilePath === "" ) config.outputSWFFilePath = scriptDir+"output/"+guid+".swf";
 
 // Define methods
 
 /**
- * Initialise the Logger and print out config values.
+ * Imports translation data into the FLA.
  *
- * returns void.
+ * @param p_textFields Array of valid translatable TextField generic objects.
+ * @param p_translationData Generic object containing all the translation data.
+ *
+ * returns Boolean value indicating success or failure.
  */
-function initLogger()
+function importData(p_textFields,p_translationData)
 {
-	Logger.init(config.logToFile,config.logToIDE,config.logFilePath,config.jobID,scriptName);
+	var success = true;
 
-	Logger.log("Script starting ...");
-
-	var configString = "";
-
-	for ( var i in config )
+	if ( p_textFields.length == 0 || p_translationData.items.length == 0 )
 	{
-		configString += "  "+i+" : "+config[i]+"\n";
+		success = false;
 	}
 
-	configString = configString.slice(0,configString.length-2);
+	if ( p_textFields.length != p_translationData.items.length )
+	{
+		Logger.log("Warning, mismatch between number of translatable TextFields in the FLA and in the XML.");
 
-	Logger.log("Using config:\n"+configString);
+		success = false;
+	}
+
+	for ( var i=0; i<p_translationData.items.length; i++ )
+	{
+		var translationObj = p_translationData.items[i];
+		var tfObj;
+
+		for ( var j=0; j<p_textFields.length; j++ )
+		{
+			if ( p_textFields[j].id == translationObj.id )
+			{
+				tfObj = p_textFields[j];
+
+				break;
+			}
+		}
+
+		if ( tfObj )
+		{
+			applyTranslationToTextField(translationObj,tfObj);
+		}
+		else
+		{
+			Logger.log("Warning, no TextField found for XML id \""+translationObj.id+"\"");
+
+			success = false;
+		}
+	}
+
+	Logger.log("Applied "+p_translationData.items.length+" translations onto "+p_textFields.length+" TextFields");
+
+	return success;
+}
+
+/**
+ * Applies translation data to a TextField.
+ *
+ * @param p_translationObj Generic object containing XML derived translation data for a single item.
+ * @param p_tfObj Generic TextField object of the type returned by fl.getObjectsByType.
+ *
+ * returns Void.
+ */
+function applyTranslationToTextField(p_translationObj,p_tfObj)
+{
+	p_tfObj.obj.setTextString(p_translationObj.text);
+}
+
+/**
+ * Parse the E4X XML object into generic JavaScript objects.
+ *
+ * @param XML object to parse.
+ *
+ * returns Object.
+ */
+function parseXML(p_xml)
+{
+	var o = {};
+
+	o.lang = p_xml.@lang;
+
+	Logger.log("XML has country code "+o.lang);
+
+	o.items = [];
+
+	var items = p_xml.items..item;
+
+	Logger.log("Found "+items.length()+" translation items in the XML");
+
+	for ( var i=0; i<items.length(); i++ )
+	{
+		var item = items[i];
+
+		o.items.push
+		(
+			{
+				id : item.@id,
+				font : item.@font,
+				size : item.@size,
+				bold : item.@bold,
+				italic : item.@italic,
+				text : item.toString()
+			}
+		);
+	}
+
+	return o;
 }
 
 /**
@@ -88,8 +178,14 @@ function initLogger()
  *
  * returns Boolean indicating success or failure.
  */
-function process()
+function go()
 {
+	var textFields;
+	var xml;
+	var translationData;
+	var importSuccess;
+	var flaSaved;
+
 	doc = Utils.loadFLA(config.flaFilePath);
 
 	if ( !doc )
@@ -97,11 +193,58 @@ function process()
 		return false;
 	}
 
-	var translatableTextFields = Utils.getAllTranslatableTextFields(doc);
+	try
+	{
+		textFields = Utils.getAllTranslatableTextFields(doc);
+	}
+	catch (p_error)
+	{
+		Logger.log("Error gathering translatable TextFields from FLA. "+p_error);
 
-	Logger.log("Found "+translatableTextFields.length+" translatable TextFields in the FLA")
+		return false;
+	}
+	
 
-	var flaSaved = fl.saveDocument(doc,config.outputFLAFilePath);
+	Logger.log("Found "+textFields.length+" translatable TextFields in the FLA");
+
+	if ( textFields.length == 0 )
+	{
+		Logger.log("No translatable TextFields found in the FLA",Logger.WARNING);
+
+		return false;
+	}
+
+	xml = Utils.loadXML(config.xmlFilePath);
+
+	if ( !xml )
+	{
+		return false;
+	}
+
+	translationData = parseXML(xml);
+
+	if ( !translationData )
+	{
+		return false;
+	}
+
+	importSuccess = false;
+
+	try
+	{
+		importSuccess = importData(textFields,translationData);
+	}
+	catch (p_error)
+	{
+		Logger.log("Error importing translation data into FLA. "+p_error,Logger.WARNING);
+	}
+	
+	if ( !importSuccess )
+	{
+		Logger.log("Warning, problems encountered importing translation data into FLA",Logger.WARNING);
+	}
+
+	flaSaved = fl.saveDocument(doc,config.outputFLAFilePath);
 
 	if ( flaSaved )
 	{
@@ -114,16 +257,34 @@ function process()
 		return false;
 	}
 
+	doc.exportSWF(config.outputSWFFilePath,true);
+
+	if ( FLfile.exists(config.outputSWFFilePath) )
+	{
+		Logger.log("SWF written to disk");
+	}
+	else
+	{
+		Logger.log("Error, can't save SWF",Logger.WARNING);
+
+		return false;
+	}
+
 	fl.closeAll(false);
+
+	if ( !importSuccess )
+	{
+		return false;
+	}
 
 	return true;
 }
 
 // Start
 
-initLogger();
+Utils.initLogger(config,scriptName);
 
-var success = process();
+var success = go();
 
 if ( success )
 {
@@ -131,7 +292,7 @@ if ( success )
 }
 else
 {
-	Logger.log("Errors encountered, operation failed",Logger.WARNING);
+	Logger.log("Errors encountered, operation may have failed",Logger.CRITICAL);
 }
 
 // Unlock and exit

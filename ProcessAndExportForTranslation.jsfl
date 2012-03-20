@@ -20,6 +20,8 @@
  *
  * - Process should be first fix invalid TextFields *then* compile a list of fields to translate
  *   rather than both these operations happening in the same function.
+ * - IDs should be added to the XML in numerical order.
+ * - Check for next available ID in FLA with while loop?
  * - Handle dynamic/input TextFields more gracefully.
  * - At the moment MovieClips in the library with a zero use count are ignored even if they
  *   are being exported for ActionScript.
@@ -128,7 +130,7 @@ function loadFLA()
  *
  * returns Array.
  */
-function parseFLA()
+function doProcessAndExport()
 {
 	var data = [];
 	var validItems = [];
@@ -337,23 +339,21 @@ function fixInvalidItem(p_tfObject,p_lib,p_doc,p_id)
  *
  * returns Boolean indicating success or failure.
  */
-function process()
+function go()
 {
 	var xml;
 	var data;
 
-	var flaLoaded = loadFLA();
+	doc = Utils.loadFLA(config.flaFilePath);
 
-	if ( !flaLoaded )
+	if ( !doc )
 	{
-		Logger.log("Error, can't load FLA",Logger.CRITICAL);
-
 		return false;
 	}
 
 	try
 	{
-		data = parseFLA();
+		data = doProcessAndExport();
 	}
 	catch (p_error)
 	{
@@ -417,9 +417,9 @@ function process()
 
 // Start
 
-initLogger();
+Utils.initLogger(config,scriptName);
 
-var success = process();
+var success = go();
 
 if ( success )
 {

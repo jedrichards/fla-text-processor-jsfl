@@ -380,6 +380,15 @@ var Utils =
 		}
 	},
 
+	/**
+	 * Run through all TextFields present in the FLA (does not include TextFields in unused symbols
+	 * in the library). For every TextField found push the associated object onto the returned
+	 * array. An additional "id" property is added to the TextField's object.
+	 *
+	 * @param p_doc A reference to the FLA to search.
+	 *
+	 * returns Array of translatable TextField generic objects (fl.findObjectInDocByType type).
+	 */
 	getAllTranslatableTextFields : function(p_doc)
 	{
 		var data = [];
@@ -396,6 +405,11 @@ var Utils =
 
 			if ( element.textType == this.STATIC_TEXTFIELD && parent != undefined && this.isTranslatableMovieClip(parent.obj.libraryItem,p_doc.library) )
 			{
+				var pathName = parent.obj.libraryItem.name;
+				var id = this.getIDByLibPathName(pathName);
+
+				o.id = id;
+
 				data.push(o);
 			}
 		}
@@ -421,6 +435,67 @@ var Utils =
 		else
 		{
 			return fl.openDocument(p_flaPath);
+		}
+	},
+
+	/**
+	 * Initialise the logger.
+	 *
+	 * @param p_config Reference to the main config object.
+	 * @param p_scriptFileName String containing the filename of the currently executing JSFL.
+	 *
+	 * returns Void.
+	 */
+	initLogger : function(p_config,p_scriptFileName)
+	{
+		if ( !Logger )
+		{
+			return;
+		}
+
+		Logger.init(p_config.logToFile,p_config.logToIDE,p_config.logFilePath,p_config.jobID,p_scriptFileName);
+
+		Logger.log("Script starting ...");
+
+		var configString = "";
+
+		for ( var i in p_config )
+		{
+			configString += "  "+i+" : "+p_config[i]+"\n";
+		}
+
+		configString = configString.slice(0,configString.length-2);
+
+		Logger.log("Using config:\n"+configString);
+	},
+
+	/**
+	 * Load an external XML file and parse it's contents into a E4X XML object.
+	 *
+	 * @param p_xmlFilePath Full file path to the XML.
+	 *
+	 * returns XML object.
+	 */
+	loadXML : function(p_xmlFilePath)
+	{
+		var xmlString = FLfile.read(p_xmlFilePath);
+
+		if ( xmlString )
+		{
+			try
+			{
+				return new XML(xmlString);
+			}
+			catch( p_error )
+			{
+				Logger.log("XML parse error. "+p_error,Logger.WARNING);
+
+				return null;
+			}
+		}
+		else
+		{
+			return null;
 		}
 	}
 };
