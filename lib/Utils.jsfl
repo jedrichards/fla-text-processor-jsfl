@@ -262,51 +262,120 @@ var Utils =
 
 		// Clean up any MovieClips that have a zero use count and aren't exported for AS:
 
-		//this.deleteUnusedMovieClips(p_lib,p_doc);
+		this.deleteUnusedSymbols(p_doc);
 	},
 
-	deleteUnusedMovieClips : function(p_lib,p_doc)
+	/**
+	 * Deletes any unused symbols from the library.
+	 *
+	 * @param p_doc A reference to the document to tidy up.
+	 *
+	 * returns Void.
+	 */
+	deleteUnusedSymbols : function(p_doc)
 	{
 		var namesForDeletion = [];
 		var i;
 
-		for ( i=0; i<p_lib.items.length; i++ )
+		for ( i=0; i<p_doc.library.items.length; i++ )
 		{
-			item = p_lib.items[i];
+			item = p_doc.library.items[i];
 
-			if ( p_lib.getItemType(item.name) == this.MOVIECLIP_LIB_ITEM )
+			var useCount = this.getUseCount(item.name,p_doc);
+			var type = p_doc.library.getItemType(item.name);
+
+			switch ( type )
 			{
-				if ( !item.linkageExportForAS )
-				{
-					if ( !this.isItemOnStage(item,p_doc) )
+				case this.MOVIECLIP_LIB_ITEM:
+				case this.BUTTON_LIB_ITEM:
+					if ( !item.linkageExportForAS && useCount == 0 )
 					{
 						namesForDeletion.push(item.name);
 					}
-				}
+					break;
+				case this.GRAPHIC_LIB_ITEM:
+				case this.BITMAP_LIB_ITEM:
+					if ( useCount == 0 )
+					{
+						namesForDeletion.push(item.name);
+					}
+					break;
+				default:
+					break;
 			}
 		}
 
 		for ( i=0; i<namesForDeletion.length; i++ )
 		{
-			p_lib.deleteItem(namesForDeletion[i]);
+			p_doc.library.deleteItem(namesForDeletion[i]);
 		}
 	},
 
-	isItemOnStage : function(p_item,p_doc)
+	/**
+	 * Step through the entire DOM of an FLA counting the number of uses of the specified library
+	 * item. Why isn't this in the API?
+	 *
+	 * @param p_namePath Library name path of the item to search for.
+	 * @param p_doc A reference to the document to search.
+	 *
+	 * returns Number item's use count.
+	 */
+	getUseCount : function(p_namePath,p_doc)
 	{
-		var type = p_doc.library.getItemType(p_item.name);
+		p_doc.library.editItem(p_doc);
 
-		var results = fl.findObjectInDocByType(this.INSTANCE_TIMELINE_ELEMENT,p_doc);
-		
-		for ( var i=0; i<results.length; i++ )
+		var timeline = p_doc.getTimeline();
+		var useCount = {count:0};
+
+		parseTimeline(p_namePath,timeline,useCount);
+
+		function parseTimeline(p_namePath,p_timeline,p_countObj)
 		{
-			if ( p_item.name == results[i].obj.libraryItem.name )
+			var layers = p_timeline.layers;
+			var numLayers = layers.length;
+
+			for ( var i=0; i<numLayers; i++ )
 			{
-				return true;
+				var layer = layers[i];
+
+				var frames = layer.frames;
+				var numFrames = layer.frames.length;
+
+				for ( var j=0; j<numFrames; j++ )
+				{
+					var frame = frames[j];
+					var isKeyFrame = frame.startFrame == j;
+
+					if ( isKeyFrame )
+					{
+						var elements = frame.elements;
+						var numElements = elements.length;
+
+						for ( var k=0; k<numElements; k++ )
+						{
+							var element = elements[k];
+							var elementType = element.elementType;
+							var libraryItem = element.libraryItem;
+							
+							if ( libraryItem )
+							{
+								if ( libraryItem.name == p_namePath )
+								{
+									p_countObj.count++;
+								}
+
+								if ( libraryItem.timeline )
+								{
+									parseTimeline(p_namePath,libraryItem.timeline,p_countObj);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 
-		return false;
+		return useCount.count;
 	},
 
 	/**
@@ -471,6 +540,54 @@ var Utils =
 				o.id = id;
 
 				data.push(o);
+			}
+		}
+
+		return data;
+	},
+
+	getAllStaticTextFields : function(p_doc)
+	{
+		var results = fl.findObjectInDocByType(this.TEXTFIELD_TIMELINE_ELEMENT,p_doc);
+		var data = [];
+
+		for ( var i=0; i<results.length; i++ )
+		{
+			var o = results[i];
+			var element = o.obj;
+
+			if ( element.textType == this.STATIC_TEXTFIELD )
+			{
+				data.push(o);
+			}
+		}
+
+		return data;
+	},
+
+	/**
+	 * Generate an array of library items that are not on the current document's stage (or any 
+	 * nested MovieClip) but are exported for AS.
+	 *
+	 * @param p_doc A reference to the document to search.
+	 *
+	 * returns Array of library items.
+	 */
+	getAllUnusedExportedSymbols : function(p_doc)
+	{
+		var library = p_doc.library;
+		var items = library.items;
+		var numItems = items.length;
+		var data = [];
+		
+		for ( var i=0; i<numItems; i++ )
+		{
+			var item = items[i];
+			var useCount = this.getUseCount(item.name,p_doc);
+
+			if ( item.linkageExportForAS && useCount == 0 )
+			{
+				data.push(item);
 			}
 		}
 
