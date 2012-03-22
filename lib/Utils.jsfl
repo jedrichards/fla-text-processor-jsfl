@@ -256,6 +256,8 @@ var Utils =
 			p_lib.moveToFolder(destinationFolder,item.name,true);
 		}
 
+		p_lib.moveToFolder(textMCFolderName,mcFolderName+"/TranslatableTextMC",true);
+
 		// Clean up any empty folders:
 
 		this.deleteEmptyLibFolders(p_lib);
@@ -288,7 +290,7 @@ var Utils =
 			{
 				case this.MOVIECLIP_LIB_ITEM:
 				case this.BUTTON_LIB_ITEM:
-					if ( !item.linkageExportForAS && useCount == 0 )
+					if ( !item.linkageExportForAS && useCount == 0 && item.name != "movieclips-text/TranslatableTextMC" )
 					{
 						namesForDeletion.push(item.name);
 					}
@@ -733,5 +735,124 @@ var Utils =
 		}
 
 		return tempLayerIndex;
+	},
+
+	/**
+	 * Create a sprite-sheet style MovieClip containing all the translatable TextFields used in the
+	 * FLA.
+	 *
+	 * @param p_doc A reference to the current FLA.
+	 *
+	 * @return Void.
+	 */
+	createTextSheet : function(p_doc)
+	{
+		var library = p_doc.library;
+		var name = "TranslatableTextMC";
+
+		if ( this.isItemInLib(name,library) )
+		{
+			library.deleteItem(name);
+		}
+		
+		var textFields = this.getAllTranslatableTextFields(p_doc);
+		
+		function sortOnID(p_a,p_b)
+		{
+			var aNum = parseInt(p_a.id.split("tf")[1]);
+			var bNum = parseInt(p_b.id.split("tf")[1]);
+
+			if ( aNum > bNum )
+			{
+				return -1;
+			}
+			else if ( aNum < bNum )
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		textFields.sort(sortOnID);
+
+		library.addNewItem("movie clip",name);
+
+		var holder = library.items[library.findItemIndex(name)];
+
+		library.editItem(name);
+
+		var holderTimeline = p_doc.getTimeline();
+		var tfHolders = [];
+		var i;
+
+		for ( i=0; i<textFields.length; i++ )
+		{
+			var tfObj = textFields[i];
+			var parent = tfObj.parent;
+			var parentName = tfObj.parent.obj.libraryItem.name;
+			var layerNum = holderTimeline.addNewLayer(tfObj.id);
+
+			library.addItemToDocument({x:0,y:0},parentName);
+
+			tfHolders.push(holderTimeline.layers[0].frames[0].elements[0]);
+		}
+
+		for ( i=0; i<holderTimeline.layers.length; i++ )
+		{
+			if ( holderTimeline.layers[i].name == "Layer 1" )
+			{
+				holderTimeline.deleteLayer(i);
+			}
+		}
+
+		function sortOnHeight(p_a,p_b)
+		{
+			var aNum = p_a.height;
+			var bNum = p_b.height;
+
+			if ( aNum > bNum )
+			{
+				return 1;
+			}
+			else if ( aNum < bNum )
+			{
+				return -1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		tfHolders.sort(sortOnHeight);
+
+		var numCols = 3;
+		var padding = 15;
+		var heightArray = [];
+		var xPos = 0;
+		var yPos = 0;
+
+		for ( i=0; i<tfHolders.length; i++ )
+		{
+			var element = tfHolders[i];
+			
+			element.x = xPos;
+			element.y = yPos;
+
+			heightArray.push(element.height);
+
+			xPos += element.width + padding;
+
+			if ( (i+1) % numCols == 0 )
+			{
+				xPos = 0;
+				yPos += Math.max.apply(Math,heightArray)+padding;
+
+				heightArray = [];
+			}
+		}
 	}
 };

@@ -82,12 +82,6 @@ if ( config.outputSWFFilePath === "" ) config.outputSWFFilePath = scriptDir+"out
  */
 function doProcessAndExport(p_doc)
 {
-	// 1. Temporarily add MovieClips to the stage that have zero use count but are exported for AS.
-	// 2. Fix TextFields that are not wrapped in a properly translatable MovieClip.
-	//    - TextFields that are formatted correctly but just have wrong name should be renamed.
-	// 3. Sweep FLA again, adding all formatted wrapped TextFields to a master array.
-	// 4. Remove temporarily added MovieClips
-
 	var data = [];
 	var library = p_doc.library;
 	var i;
@@ -188,6 +182,10 @@ function doProcessAndExport(p_doc)
 	}
 
 	data.sort(sortOnID);
+
+	// Create the TextField sprite sheet:
+
+	Utils.createTextSheet(p_doc);
 
 	// Clean up the stage and return the data:
 
