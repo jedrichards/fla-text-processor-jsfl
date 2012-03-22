@@ -26,7 +26,7 @@ var Utils =
 	 *
 	 * @param p_pathName Library item's path name, e.g. "somefolder/textfields/tf12".
 	 *
-	 * returns boolean.
+	 * @return Boolean.
 	 */ 
 	isTranslatableLibPathName : function(p_pathName)
 	{
@@ -66,7 +66,7 @@ var Utils =
 	 *
 	 * @param p_pathName Library item's path name, e.g. "somefolder/textfields/tf12".
 	 *
-	 * returns string, the translation ID or "!" if the "tfn" convention isn't followed.
+	 * @return String, the translation ID or "!" if the "tfn" convention isn't followed.
 	 */
 	getIDByLibPathName : function(p_pathName)
 	{
@@ -90,7 +90,7 @@ var Utils =
 	 * @param p_libItem Library item of type MovieClip.
 	 * @param p_lib A reference to the item's associated library object.
 	 *
-	 * returns Boolean.
+	 * @return Boolean.
 	 */
 	isTranslatableMovieClip : function(p_libItem,p_lib)
 	{
@@ -161,7 +161,7 @@ var Utils =
 	 *                   true if the item was present in the library at "folder1/folder2/tf12".
 	 * @param p_lib A reference to the library object to search.
 	 *
-	 * returns Boolean.
+	 * @return Boolean.
 	 */
 	isItemInLib : function(p_namePart,p_lib)
 	{
@@ -188,7 +188,7 @@ var Utils =
 	 * @param p_lib A reference to the library object to tidy.
 	 * @param p_doc A reference to the associated FLA document.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	tidyLibrary : function(p_lib,p_doc)
 	{
@@ -270,7 +270,7 @@ var Utils =
 	 *
 	 * @param p_doc A reference to the document to tidy up.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	deleteUnusedSymbols : function(p_doc)
 	{
@@ -312,13 +312,13 @@ var Utils =
 	},
 
 	/**
-	 * Step through the entire DOM of an FLA counting the number of uses of the specified library
-	 * item. Why isn't this in the API?
+	 * Recurse through the timelines currently on stage to count the use count of the specified
+	 * library item. Why isn't this in the API? >.<
 	 *
 	 * @param p_namePath Library name path of the item to search for.
 	 * @param p_doc A reference to the document to search.
 	 *
-	 * returns Number item's use count.
+	 * @return Number, item's use count.
 	 */
 	getUseCount : function(p_namePath,p_doc)
 	{
@@ -383,7 +383,7 @@ var Utils =
 	 *
 	 * @param p_lib A reference to the library object to tidy.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	deleteEmptyLibFolders : function(p_lib)
 	{
@@ -410,7 +410,7 @@ var Utils =
 	 * @param p_lib A reference to the library object.
 	 * @param p_folderName The folder path to search.
 	 *
-	 * returns Boolean.
+	 * @return Boolean.
 	 */
 	isLibFolderEmpty : function(p_lib,p_folderName)
 	{
@@ -439,7 +439,7 @@ var Utils =
 	 *
 	 * @param p_lib A reference to the library object to search.
 	 *
-	 * returns Boolean.
+	 * @return Boolean.
 	 */
 	libHasEmptyFolders : function(p_lib)
 	{
@@ -462,7 +462,7 @@ var Utils =
 	/**
 	 * Return a 32 character hexadecimal GUID, e.g. 21EC2020-3AEA-1069-A2DD-08002B30309D.
 	 *
-	 * returns GUID String.
+	 * @return GUID String.
 	 */
 	guid : function()
 	{	
@@ -477,7 +477,7 @@ var Utils =
 	/**
 	 * Return the current system time as a timestamp in the format [DD/MM/YYYY:HH:MM:SS].
 	 *
-	 * returns Timestamp String.
+	 * @return Timestamp String.
 	 */
 	getTimeStamp : function()
 	{
@@ -495,7 +495,7 @@ var Utils =
 	 *
 	 * @param p_num Number to zero pad.
 	 *
-	 * returns Zero padded numerical string.
+	 * @return Zero padded numerical string.
 	 */
 	zeroPad : function(p_num)
 	{
@@ -516,7 +516,7 @@ var Utils =
 	 *
 	 * @param p_doc A reference to the FLA to search.
 	 *
-	 * returns Array of translatable TextField generic objects (fl.findObjectInDocByType type).
+	 * @return Array of translatable TextField generic objects (fl.findObjectInDocByType type).
 	 */
 	getAllTranslatableTextFields : function(p_doc)
 	{
@@ -532,14 +532,22 @@ var Utils =
 
 			// Skip any dynamic or input TextFields, these are not supported.
 
-			if ( element.textType == this.STATIC_TEXTFIELD && parent != undefined && this.isTranslatableMovieClip(parent.obj.libraryItem,p_doc.library) )
+			if ( element.textType == this.STATIC_TEXTFIELD )
 			{
-				var pathName = parent.obj.libraryItem.name;
-				var id = this.getIDByLibPathName(pathName);
+				if ( parent != undefined )
+				{
+					var mcWrapper = parent.obj;
 
-				o.id = id;
+					if ( this.isTranslatableMovieClip(mcWrapper.libraryItem,p_doc.library) )
+					{
+						var pathName = mcWrapper.libraryItem.name;
+						var id = this.getIDByLibPathName(pathName);
 
-				data.push(o);
+						o.id = id;
+
+						data.push(o);
+					}
+				}
 			}
 		}
 
@@ -571,7 +579,7 @@ var Utils =
 	 *
 	 * @param p_doc A reference to the document to search.
 	 *
-	 * returns Array of library items.
+	 * @return Array of library items.
 	 */
 	getAllUnusedExportedSymbols : function(p_doc)
 	{
@@ -599,7 +607,7 @@ var Utils =
 	 *
 	 * @param p_flaPath Full file path to the FLA.
 	 *
-	 * returns Boolean success value.
+	 * @return Boolean success value.
 	 */
 	loadFLA : function(p_flaPath)
 	{
@@ -621,7 +629,7 @@ var Utils =
 	 * @param p_config Reference to the main config object.
 	 * @param p_scriptFileName String containing the filename of the currently executing JSFL.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	initLogger : function(p_config,p_scriptFileName)
 	{
@@ -651,7 +659,7 @@ var Utils =
 	 *
 	 * @param p_xmlFilePath Full file path to the XML.
 	 *
-	 * returns XML object.
+	 * @return XML object.
 	 */
 	loadXML : function(p_xmlFilePath)
 	{
@@ -682,7 +690,7 @@ var Utils =
 	 * @param p_swfFilePath File path to write the SWF.
 	 * @param p_doc Reference to the FLA document to export.
 	 *
-	 * returns Boolean value indicating success.
+	 * @return Boolean value indicating success.
 	 */
 	exportSWF : function(p_swfFilePath,p_doc)
 	{
@@ -697,5 +705,33 @@ var Utils =
 
 			return false;
 		}
+	},
+
+	/**
+	 * Iterates through the library and adds to the stage any MovieClips or Buttons that have been
+	 * exported for AS but not placed on the stage DOM anywhere.
+	 *
+	 * @param p_doc A reference to the FLA to work on.
+	 *
+	 * @return Number, the index of the new layer added.
+	 */
+	addUnusedSymbolsToStage : function(p_doc)
+	{
+		var library = p_doc.library;
+
+		library.editItem(p_doc);
+
+		var root = p_doc.getTimeline();
+		var tempLayerName = this.guid();
+		var tempLayerIndex = root.addNewLayer(tempLayerName)
+		var tempLayer = root.layers[tempLayerIndex];
+		var unUsedSymbols = this.getAllUnusedExportedSymbols(p_doc);
+
+		for ( i=0; i<unUsedSymbols.length; i++ )
+		{
+			p_doc.addItem({x:0,y:0},unUsedSymbols[i]);
+		}
+
+		return tempLayerIndex;
 	}
 };

@@ -1,12 +1,14 @@
-<root lang="fr_FR">
-  <items>
-    <item id="tf5" font="Georgia" size="24" bold="false" italic="false">Howdy, je me présente à plusieurs endroits.</item>
-    <item id="tf1" font="Georgia" size="24" bold="false" italic="false">Bonjour tout le monde!</item>
-    <item id="tf2" font="Georgia" size="24" bold="false" italic="false">Quoi de neuf?</item>
-    <item id="tf4" font="Georgia" size="14" bold="false" italic="false">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</item>
-    <item id="tf7" font="Georgia" size="14" bold="false" italic="false">Bonjour, je suis statique TextField 2 sur 2 assis sur un calendrier MovieClip!</item>
-    <item id="tf8" font="Georgia" size="14" bold="false" italic="false">Bonjour, je suis statique TextField 1 sur 2 assis sur un calendrier MovieClip!</item>
-    <item id="tf9" font="Georgia" size="14" bold="false" italic="false">Bonjour, Je suis un TextField statique assis sur un calendrier graphique quelque part!</item>
-    <item id="tf10" font="Georgia" size="14" bold="false" italic="false">Bonjour, Je suis un TextField statique assis directement sur la scène principale!</item>
-  </items>
+<root lang="nl_NL">
+   <items>
+     <item id="tf1" font="Georgia" size="24" bold="false" italic="false">Hallo wereld!</item>
+     <item id="tf2" font="Georgia" size="15" bold="false" italic="false">Wat is er? Ik verschijnen in een verkeerde naam TextField</item>
+     <item id="tf3" font="Georgia" size="24" bold="false" italic="false">Greetz. Ik alleen in de bibliotheek.</item>
+     <item id="tf4" font="Georgia" size="14" bold="false" italic="false">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed niet eiusmod tijdelijk de incididunt ut Labore et dolore magna aliqua. Ut Enim ad minim veniam, quis nostrud exercitation ullamco laboris NISI ut aliquip ex ea commodo consequat. Duis Aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</item>
+     <item id="tf5" font="Georgia" size="24" bold="false" italic="false">Howdy, heb ik in meerdere plaatsen.</item>
+     <item id="tf6" font="Georgia" size="24" bold="false" italic="false">Greetz. Ik heb ook alleen in de bibliotheek.</item>
+     <item id="tf7" font="Georgia" size="14" bold="false" italic="false">Hallo, Ik ben statische TextField 2 van 2 zat op een MovieClip tijdlijn!</item>
+     <item id="tf8" font="Georgia" size="14" bold="false" italic="false">Hallo, Ik ben statische TextField 1 van 2 zat op een MovieClip tijdlijn!</item>
+     <item id="tf9" font="Georgia" size="14" bold="false" italic="false">Hallo, ik ben een statisch tekstveld zat ergens op een grafische tijdlijn!</item>
+     <item id="tf10" font="Georgia" size="14" bold="false" italic="false">Hallo, ik ben een statisch tekstveld zat direct op het grote podium!</item>
+   </items>
 </root>

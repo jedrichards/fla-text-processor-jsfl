@@ -27,7 +27,7 @@ var Logger =
 	 * @param p_jobID A reference number to the current job ID, supplied to the main script by PHP.
 	 * @param p_scriptName The filename of the currently running script.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	init : function(p_logToFile,p_logToIDE,p_logFilePath,p_jobID,p_scriptName)
 	{
@@ -49,7 +49,7 @@ var Logger =
 	 * @param p_logItem String to log.
 	 * @param p_type String specifying the type of message, i.e. SYSTEM, WARNING or CRITICAL.
 	 *
-	 * returns Void.
+	 * @return Void.
 	 */
 	log : function(p_logItem,p_type)
 	{

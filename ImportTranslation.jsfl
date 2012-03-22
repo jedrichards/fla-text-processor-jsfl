@@ -5,9 +5,6 @@
  *
  * TODO:
  *
- * - At the moment MovieClips in the library with a zero use count are ignored even if they
- *   are being exported for ActionScript.
- *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */
 
@@ -32,7 +29,6 @@ var scriptPath = fl.scriptURI;
 var scriptPathParts = scriptPath.split("/");
 var scriptName = scriptPathParts[scriptPathParts.length-1];
 var scriptDir = scriptPath.split(scriptName)[0];
-var doc;
 
 // Set defaults if not supplied by PHP:
 
@@ -63,14 +59,14 @@ if ( config.outputSWFFilePath === "" ) config.outputSWFFilePath = scriptDir+"out
 // Define methods
 
 /**
- * Imports translation data into the FLA.
+ * Applies the translations found in the XML to the static TextFields found in the FLA.
  *
  * @param p_textFields Array of valid translatable TextField generic objects.
- * @param p_translationData Generic object containing all the translation data.
+ * @param p_translationData Object containing all the translation data.
  *
- * returns Boolean value indicating success or failure.
+ * @return Boolean value indicating success or failure.
  */
-function importData(p_textFields,p_translationData)
+function applyTranslations(p_textFields,p_translationData)
 {
 	var success = true;
 
@@ -124,7 +120,7 @@ function importData(p_textFields,p_translationData)
  * @param p_translationObj Generic object containing XML derived translation data for a single item.
  * @param p_tfObj Generic TextField object of the type returned by fl.getObjectsByType.
  *
- * returns Void.
+ * @return Void.
  */
 function applyTranslationToTextField(p_translationObj,p_tfObj)
 {
@@ -136,7 +132,7 @@ function applyTranslationToTextField(p_translationObj,p_tfObj)
  *
  * @param XML object to parse.
  *
- * returns Object.
+ * @return Object.
  */
 function parseXML(p_xml)
 {
@@ -176,16 +172,20 @@ function parseXML(p_xml)
  * Main processing function for this JSFL script. Calls the various utility methods and reports
  * errors.
  *
- * returns Boolean indicating success or failure.
+ * @return Boolean indicating success or failure.
  */
 function go()
 {
 	var textFields;
 	var xml;
 	var translationData;
+	var doc;
+	var library;
 
 	var flaSaved = false;
 	var writeError = false;
+
+	// Load the FLA:
 
 	doc = Utils.loadFLA(config.flaFilePath);
 
@@ -193,6 +193,14 @@ function go()
 	{
 		return false;
 	}
+
+	library = doc.library;
+
+	// Temporarily add unused/exported MovieClips to the stage:
+
+	var tempLayerIndex = Utils.addUnusedSymbolsToStage(doc);
+
+	// Gather translatable TextFields from the FLA:
 
 	try
 	{
@@ -213,6 +221,8 @@ function go()
 
 		return false;
 	}
+
+	// Load and parse the XML:
 
 	xml = Utils.loadXML(config.xmlFilePath);
 
@@ -237,16 +247,25 @@ function go()
 		return false;
 	}
 
+	// Attempt to apply the parsed translation data to the static TextFields found in the FLA:
+
 	try
 	{
-		importData(textFields,translationData);
+		applyTranslations(textFields,translationData);
 	}
 	catch (p_error)
 	{
-		Logger.log("Error importing translation data into FLA. "+p_error,Logger.WARNING);
+		Logger.log("Error applying translation data to FLA. "+p_error,Logger.WARNING);
 
 		return false;
 	}
+
+	// Clean up the stage:
+
+	library.editItem(doc);
+	doc.getTimeline().deleteLayer(tempLayerIndex);
+
+	// Write the FLA and SWF to disk:
 
 	flaSaved = fl.saveDocument(doc,config.outputFLAFilePath);
 
@@ -273,6 +292,8 @@ function go()
 
 		writeError = true;
 	}
+
+	// Close all open files:
 
 	fl.closeAll(false);
 

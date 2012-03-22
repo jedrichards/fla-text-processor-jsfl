@@ -17,17 +17,8 @@
  * The processed FLA and XML are then saved to the file paths specified in the config.
  *
  * TODO:
- *
- * - Process should be first fix invalid TextFields *then* compile a list of fields to translate
- *   rather than both these operations happening in the same function.
- * - IDs should be added to the XML in numerical order.
- * - Check for next available ID in FLA with while loop?
- * - Handle dynamic/input TextFields more gracefully.
- * - At the moment MovieClips in the library with a zero use count are ignored even if they
- *   are being exported for ActionScript.
+ * - Handle dynamic/input TextFields more gracefully?
  * - Test with lots of banners from the wild.
- * - Lock file should only be deleted by JSFL not created.
- * - Tidying unused MovieClips not working?
  *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */
@@ -87,7 +78,7 @@ if ( config.outputSWFFilePath === "" ) config.outputSWFFilePath = scriptDir+"out
  * static TextFields, wrapping them in a MovieClip if required and returning the data collection
  * as an Array suitable for converting to XML.
  *
- * returns Array.
+ * @return Array.
  */
 function doProcessAndExport(p_doc)
 {
@@ -100,28 +91,12 @@ function doProcessAndExport(p_doc)
 	var data = [];
 	var library = p_doc.library;
 	var i;
+	var tfObj;
 
 	// Add to the root timeline any unused symbols that are exported for ActionScript to make sure
 	// we include them in our processing. We'll delete this temporary layer later:
 
-	library.editItem(p_doc);
-
-	var rootTimeine = p_doc.getTimeline();
-	var tempLayerName = Utils.guid();
-	var tempLayerIndex = rootTimeine.addNewLayer(tempLayerName)
-	var tempLayer = rootTimeine.layers[tempLayerIndex];
-	
-	var unUsedSymbols = Utils.getAllUnusedExportedSymbols(p_doc);
-
-	for ( i=0; i<unUsedSymbols.length; i++ )
-	{
-		p_doc.addItem({x:0,y:0},unUsedSymbols[i]);
-	}
-
-	if ( unUsedSymbols.length > 0 )
-	{
-		Logger.log("Temporarily added "+unUsedSymbols.length+" unused but exported for AS library items to the timeline temporarily");
-	}
+	var tempLayerIndex = Utils.addUnusedSymbolsToStage(p_doc);
 
 	// Find all static TextFields. Analyse them to see if they're in the correct translatable format
 	// and if required fix them (wrap them in a MovieClip):
@@ -134,13 +109,13 @@ function doProcessAndExport(p_doc)
 
 	for ( i=0; i<staticTextFields.length; i++ )
 	{
-		var tfObj = staticTextFields[i];
+		tfObj = staticTextFields[i];
 
 		if ( tfObj.parent === undefined )
 		{
 			invalidCount++;
 
-			fixInvalidTextFieldObject(tfObj,p_doc,getNextAvailableTextFieldName(library));
+			fixInvalidTextFieldObject(tfObj,p_doc,getNextTFID(library));
 		}
 		else
 		{
@@ -148,7 +123,7 @@ function doProcessAndExport(p_doc)
 			{
 				invalidCount++;
 
-				fixInvalidTextFieldObject(tfObj,p_doc,getNextAvailableTextFieldName(library));
+				fixInvalidTextFieldObject(tfObj,p_doc,getNextTFID(library));
 			}
 			else
 			{
@@ -157,85 +132,69 @@ function doProcessAndExport(p_doc)
 		}
 	}
 
-	return data;
+	Logger.log(validCount+" static TextFields were properly formatted");
+	Logger.log(invalidCount+" static TextFields were improperly formatted and fixed");
 
-	/*
-	var data = [];
-	var validItems = [];
-	var invalidItems = [];
-	var lib = p_doc.library;
-	var results = fl.findObjectInDocByType(Utils.TEXTFIELD_TIMELINE_ELEMENT,p_doc);
-	var i;
+	// Gather all translatable TextFields and generate the translation data:
 
-	Logger.log("Found "+results.length+" TextField candidates for translation in the FLA");
+	var translatableTextFields = Utils.getAllTranslatableTextFields(p_doc);
 
-	// Loop through all TextField elements found in the document.
+	Logger.log("Gathered "+translatableTextFields.length+" translatable TextFields");
 
-	for ( i=0; i<results.length; i++ )
+	for ( i=0; i<translatableTextFields.length; i++ )
 	{
-		var o = results[i];
+		tfObj = translatableTextFields[i];
 
-		var element = o.obj;
-		var parent = o.parent;
+		var tfElement = tfObj.obj;
 
-		// Skip any dynamic or input TextFields, these are not supported.
-
-		if ( element.textType != Utils.STATIC_TEXTFIELD )
+		var translationObj =
 		{
-			Logger.log("Warning "+element.textType+" TextField found, skipping ...",Logger.WARNING);
-
-			continue;
+			id : tfObj.id,
+			text : tfElement.getTextString(),
+			font : tfElement.getTextAttr("face"),
+			size : tfElement.getTextAttr("size"),
+			bold : tfElement.getTextAttr("bold"),
+			italic : tfElement.getTextAttr("italic")
 		}
 
-		if ( parent === undefined )
-		{
-			// Parent is undefined, therefore TextField is directly on the main timeline and is not
-			// nested in a parent symbol.
+		// Strip carriage returns and newlines and remove double spaces
 
-			invalidItems.push(o);
+		translationObj.text = translationObj.text.replace(/\n/g," ");
+		translationObj.text = translationObj.text.replace(/\r/g," ");
+		translationObj.text = translationObj.text.replace("  "," ");
+
+		data.push(translationObj);
+	}
+
+	// Sort the array:
+
+	function sortOnID(p_a,p_b)
+	{
+		var aNum = parseInt(p_a.id.split("tf")[1]);
+		var bNum = parseInt(p_b.id.split("tf")[1]);
+
+		if ( aNum > bNum )
+		{
+			return 1;
+		}
+		else if ( aNum < bNum )
+		{
+			return -1;
 		}
 		else
 		{
-			var parentPathName = parent.obj.libraryItem.name;
-			
-			if ( Utils.isTranslatableMovieClip(parent.obj.libraryItem,lib) )
-			{
-				validItems.push(o);
-			}
-			else
-			{
-				invalidItems.push(o);
-			}
+			return 0;
 		}
 	}
 
-	if ( validItems.length > 0 ) Logger.log(validItems.length+" TextFields were wrapped in properly formatted MovieClips");
-	if ( invalidItems.length > 0 ) Logger.log(invalidItems.length+" TextFields found were either on the root timeline or in improperly formatted MovieClips");
+	data.sort(sortOnID);
 
-	pushTranslationObjects(data,validItems);
+	// Clean up the stage and return the data:
 
-	if ( invalidItems.length > 0 )
-	{
-		Logger.log("Wrapping invalid TextFields in MovieClips ...");
-		
-		var idNum = getNextID(data);
-
-		for ( i=0; i<invalidItems.length; i++ )
-		{
-			do
-			{
-				idNum++;
-			}
-			while ( Utils.isItemInLib("tf"+idNum,lib) )
-
-			fixInvalidItem(invalidItems[i],lib,p_doc,"tf"+idNum);
-		}
-		
-		pushTranslationObjects(data,invalidItems);
-	}
+	library.editItem(p_doc);
+	p_doc.getTimeline().deleteLayer(tempLayerIndex);
 
 	return data;
-	*/
 }
 
 /**
@@ -245,7 +204,7 @@ function doProcessAndExport(p_doc)
  * @param p_data Master array being built by processForTranslation.
  * @param p_tfObjects Generic TextField Object array (as generated by fl.findObjectInDocByType).
  *
- * returns Void;
+ * @return Void.
  */
 function pushTranslationObjects(p_data,p_tfObjects)
 {
@@ -272,12 +231,65 @@ function pushTranslationObjects(p_data,p_tfObjects)
 }
 
 /**
+ * Compute the next available TextField ID.
+ *
+ * @param p_library Library object to analyse.
+ *
+ * @return String.
+ */
+function getNextTFID(p_library)
+{
+	var num = 1;
+
+	while ( Utils.isItemInLib("tf"+num,p_library) )
+	{
+		num++;
+	}
+
+	return "tf"+num;
+}
+
+/**
+ * Where a static TextField is found on a timeline and not wrapped in a translatable MovieClip
+ * this method will attempt to dyncamically create a MovieClip and reparent the TextField into it.
+ *
+ * @param p_tfObj Generic TextField object as generated by fl.findObjectsByType.
+ * @param p_doc Reference to the current FLA document being worked on.
+ * @param p_id The desired ID of the new translatable MovieClip in the format "tfn".
+ *
+ * @return Void.
+ */
+function fixInvalidTextFieldObject(p_tfObj,p_doc,p_id)
+{
+	var library = p_doc.library;
+	var element  = p_tfObj.obj;
+	var parent = p_tfObj.parent;
+
+	if ( parent === undefined )
+	{
+		library.editItem(p_doc);
+	}
+	else
+	{
+		library.editItem(parent.obj.libraryItem.name);
+	}
+	
+	p_doc.selectNone();
+	p_doc.getTimeline().currentFrame = p_tfObj.keyframe.startFrame;
+	element.selected = true;
+
+	var newMC = p_doc.convertToSymbol("movie clip",p_id,"top left");
+
+	p_tfObj.parent = newMC;
+}
+
+/**
  * Generate an E4X XML object from a data array in the format returned from the
  * doProcessAndExport method.
  *
  * @param Data array from doProcessAndExport.
  *
- * returns XML object.
+ * @return XML object.
  */
 function createXML(p_data)
 {
@@ -306,57 +318,11 @@ function createXML(p_data)
 	return xml;
 }
 
-function getNextAvailableTextFieldName(p_library)
-{
-	var num = 1;
-
-	while ( Utils.isItemInLib("tf"+num,p_library) )
-	{
-		num++;
-	}
-
-	return "tf"+num;
-}
-
-/**
- * Where a static TextField is found on a timeline and not wrapped in a translatable MovieClip
- * this method will attempt to dyncamically create a MovieClip and reparent the TextField into it.
- *
- * @param p_tfObj Generic TextField object as generated by fl.findObjectsByType.
- * @param p_doc Reference to the current FLA document being worked on.
- * @param p_id The desired ID of the new translatable MovieClip in the format "tfn".
- *
- * returns Void.
- */
-function fixInvalidTextFieldObject(p_tfObj,p_doc,p_id)
-{
-	var library = p_doc.library;
-	var element  = p_tfObj.obj;
-	var parent = p_tfObj.parent;
-
-	if ( parent === undefined )
-	{
-		library.editItem(p_doc);
-	}
-	else
-	{
-		library.editItem(parent.obj.libraryItem.name);
-	}
-	
-	p_doc.selectNone();
-	p_doc.getTimeline().currentFrame = p_tfObj.keyframe.startFrame;
-	element.selected = true;
-
-	var newMC = p_doc.convertToSymbol("movie clip",p_id,"top left");
-
-	p_tfObj.parent = newMC;
-}
-
 /**
  * Main processing function for this JSFL script. Calls the various utility methods and reports
  * errors.
  *
- * returns Boolean indicating success or failure.
+ * @return Boolean indicating success or failure.
  */
 function go()
 {
