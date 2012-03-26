@@ -265,6 +265,17 @@ function go()
 	library.editItem(doc);
 	doc.getTimeline().deleteLayer(tempLayerIndex);
 
+	// Create the TextField sprite sheet:
+
+	try
+	{
+		Utils.createTextSheet(doc);
+	}
+	catch (p_error)
+	{
+		Logger.log("Warning, error creating the TextField sprite sheet. "+p_error,Logger.WARNING);
+	}
+
 	// Write the FLA and SWF to disk:
 
 	flaSaved = fl.saveDocument(doc,config.outputFLAFilePath);

@@ -183,10 +183,6 @@ function doProcessAndExport(p_doc)
 
 	data.sort(sortOnID);
 
-	// Create the TextField sprite sheet:
-
-	Utils.createTextSheet(p_doc);
-
 	// Clean up the stage and return the data:
 
 	library.editItem(p_doc);
@@ -335,8 +331,6 @@ function go()
 		return false;
 	}
 
-	Utils.tidyLibrary(doc.library,doc);
-
 	try
 	{
 		data = doProcessAndExport(doc);
@@ -348,9 +342,16 @@ function go()
 		return false;
 	}
 
-	Utils.tidyLibrary(doc.library,doc);
-
 	Logger.log("Generated "+data.length+" items for translation, converting to XML ...");
+
+	try
+	{
+		Utils.tidyLibrary(doc.library,doc);
+	}
+	catch (p_error)
+	{
+		Logger.log("Warning failed to tidy the library. "+p_error,Logger.WARNING);
+	}
 
 	try
 	{

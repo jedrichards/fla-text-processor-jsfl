@@ -739,7 +739,7 @@ var Utils =
 
 	/**
 	 * Create a sprite-sheet style MovieClip containing all the translatable TextFields used in the
-	 * FLA.
+	 * FLA for easy access to all the TextFields.
 	 *
 	 * @param p_doc A reference to the current FLA.
 	 *
@@ -747,42 +747,37 @@ var Utils =
 	 */
 	createTextSheet : function(p_doc)
 	{
-		var library = p_doc.library;
-		var name = "TranslatableTextMC";
-
-		if ( this.isItemInLib(name,library) )
-		{
-			library.deleteItem(name);
-		}
-		
+		var sheetName = "TranslatableTextMC";
+		var folderName = "movieclips-text";
+		var fullPath = folderName+"/"+sheetName;
 		var textFields = this.getAllTranslatableTextFields(p_doc);
-		
-		function sortOnID(p_a,p_b)
-		{
-			var aNum = parseInt(p_a.id.split("tf")[1]);
-			var bNum = parseInt(p_b.id.split("tf")[1]);
+		var library = p_doc.library;
 
-			if ( aNum > bNum )
-			{
-				return -1;
-			}
-			else if ( aNum < bNum )
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
+		// Tidy library and create folder if needed:
+
+		library.newFolder(folderName);
+		library.deleteItem(sheetName);
+		library.deleteItem(fullPath);
+
+		// Exit function if there are no translatable TextFields present:
+
+		if ( textFields.length == 0 )
+		{
+			return;
 		}
+
+		// Sort the TextField array by ID so that "tf1" appears at the top of the layers:
 
 		textFields.sort(sortOnID);
 
-		library.addNewItem("movie clip",name);
+		// Create a new MovieClip in the library and open it for editing:
 
-		var holder = library.items[library.findItemIndex(name)];
+		library.addNewItem("movie clip",fullPath);
+		var holder = library.items[library.findItemIndex(fullPath)];
+		library.editItem(fullPath);
 
-		library.editItem(name);
+		// Loop through all the TextFields and add their MovieClip holders to the new MovieClip's
+		// timeline:
 
 		var holderTimeline = p_doc.getTimeline();
 		var tfHolders = [];
@@ -800,6 +795,8 @@ var Utils =
 			tfHolders.push(holderTimeline.layers[0].frames[0].elements[0]);
 		}
 
+		// Delete the empty "Layer 1":
+
 		for ( i=0; i<holderTimeline.layers.length; i++ )
 		{
 			if ( holderTimeline.layers[i].name == "Layer 1" )
@@ -808,24 +805,8 @@ var Utils =
 			}
 		}
 
-		function sortOnHeight(p_a,p_b)
-		{
-			var aNum = p_a.height;
-			var bNum = p_b.height;
-
-			if ( aNum > bNum )
-			{
-				return 1;
-			}
-			else if ( aNum < bNum )
-			{
-				return -1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
+		// Layout the TextFields in a rough grid. Sort them by height first so the largest
+		// TextFields appear near the bottom of the grid:
 
 		tfHolders.sort(sortOnHeight);
 
@@ -852,6 +833,46 @@ var Utils =
 				yPos += Math.max.apply(Math,heightArray)+padding;
 
 				heightArray = [];
+			}
+		}
+
+		// Local util functions:
+
+		function sortOnID(p_a,p_b)
+		{
+			var aNum = parseInt(p_a.id.split("tf")[1]);
+			var bNum = parseInt(p_b.id.split("tf")[1]);
+
+			if ( aNum > bNum )
+			{
+				return -1;
+			}
+			else if ( aNum < bNum )
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+		
+		function sortOnHeight(p_a,p_b)
+		{
+			var aNum = p_a.height;
+			var bNum = p_b.height;
+
+			if ( aNum > bNum )
+			{
+				return 1;
+			}
+			else if ( aNum < bNum )
+			{
+				return -1;
+			}
+			else
+			{
+				return 0;
 			}
 		}
 	}
