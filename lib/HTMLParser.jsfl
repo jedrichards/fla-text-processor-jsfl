@@ -1,3 +1,16 @@
+/**
+ * HTMLParser
+ *
+ * SAX-style HTML parser. Sequentually traverse through simple (X)HTML calling callbacks when
+ * tags are encountered. Based on original code by Erik Arvidsson and John Resig offered under
+ * the Mozilla Public License.
+ *
+ * http://ejohn.org/files/htmlparser.js
+ * http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
+ *
+ * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
+ */
+
 (function(){
 
 	// Regular Expressions for parsing tags and attributes

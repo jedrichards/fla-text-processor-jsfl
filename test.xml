@@ -1,14 +1,16 @@
-<root lang="nl_NL">
-   <items>
-     <item id="tf1" font="Georgia" size="24" bold="false" italic="false">Hallo wereld!</item>
-     <item id="tf2" font="Georgia" size="15" bold="false" italic="false">Wat is er? Ik verschijnen in een verkeerde naam TextField</item>
-     <item id="tf3" font="Georgia" size="24" bold="false" italic="false">Greetz. Ik alleen in de bibliotheek.</item>
-     <item id="tf4" font="Georgia" size="14" bold="false" italic="false">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed niet eiusmod tijdelijk de incididunt ut Labore et dolore magna aliqua. Ut Enim ad minim veniam, quis nostrud exercitation ullamco laboris NISI ut aliquip ex ea commodo consequat. Duis Aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</item>
-     <item id="tf5" font="Georgia" size="24" bold="false" italic="false">Howdy, heb ik in meerdere plaatsen.</item>
-     <item id="tf6" font="Georgia" size="24" bold="false" italic="false">Greetz. Ik heb ook alleen in de bibliotheek.</item>
-     <item id="tf7" font="Georgia" size="14" bold="false" italic="false">Hallo, Ik ben statische TextField 2 van 2 zat op een MovieClip tijdlijn!</item>
-     <item id="tf8" font="Georgia" size="14" bold="false" italic="false">Hallo, Ik ben statische TextField 1 van 2 zat op een MovieClip tijdlijn!</item>
-     <item id="tf9" font="Georgia" size="14" bold="false" italic="false">Hallo, ik ben een statisch tekstveld zat ergens op een grafische tijdlijn!</item>
-     <item id="tf10" font="Georgia" size="14" bold="false" italic="false">Hallo, ik ben een statisch tekstveld zat direct op het grote podium!</item>
-   </items>
+<?xml version="1.0" encoding="UTF-8" ?>
+<root lang="en_GB">
+  <items>
+    <item id="tf1"><![CDATA[<font size="24" face="Georgia" color="#000000">Hello world!</font>]]></item>
+    <item id="tf2"><![CDATA[<font size="15" face="Georgia" color="#000000">What's up? I appear in an incorrectly named<br/>TextField</font>]]></item>
+    <item id="tf3"><![CDATA[<font size="24" face="Georgia" color="#000000">Greetz. I only appear in the Library.</font>]]></item>
+    <item id="tf4"><![CDATA[<font size="14" face="Georgia" color="#000000">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. </font>]]></item>
+    <item id="tf5"><![CDATA[<font size="24" face="Georgia" color="#000000">Howdy, I appear in multiple places.</font>]]></item>
+    <item id="tf6"><![CDATA[<font size="24" face="Georgia" color="#000000">Greetz. I also only appear in the Library.</font>]]></item>
+    <item id="tf7"><![CDATA[<font size="14" face="Georgia" color="#000000">Hello, I'm static TextField 2 of 2 sat on a MovieClip timeline!</font>]]></item>
+    <item id="tf8"><![CDATA[<font size="14" face="Georgia" color="#000000">Hello, I'm static TextField 1 of 2 sat on a MovieClip timeline!</font>]]></item>
+    <item id="tf9"><![CDATA[<font size="14" face="Georgia" color="#000000">Hello, I'm a static TextField sat on a Graphic timeline somewhere!</font>]]></item>
+    <item id="tf10"><![CDATA[<font size="14" face="Georgia" color="#000000">Hello, I'm a static TextField sat directly<br/>on the main stage!</font>]]></item>
+    <item id="tf11"><![CDATA[<font size="14" face="Georgia" color="#000000">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut </font><font size="14" face="Georgia Bold" color="#000000"><b>labore</b></font><font size="14" face="Georgia" color="#000000"> et dolore magna aliqua.<br/><br/>Ut enim ad </font><font size="14" face="Georgia Italic" color="#000000"><i>minim veniam,</i></font><font size="14" face="Georgia" color="#000000"> quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea </font><font size="14" face="Georgia" color="#006699">commodo</font><font size="14" face="Georgia" color="#000000"> consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.<br/><br/></font><font size="24" face="Georgia" color="#000000">Translated!</font>]]></item>
+  </items>
 </root>

@@ -1,3 +1,11 @@
+/**
+ * Utils
+ *
+ * Generic utility functions used across all scripts.
+ *
+ * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
+ */
+
 var Utils =
 {
 	INSTANCE_TIMELINE_ELEMENT : "instance",
@@ -667,6 +675,10 @@ var Utils =
 	{
 		var xmlString = FLfile.read(p_xmlFilePath);
 
+		// E4X can't parse the XML encoding declaration so strip it out
+
+		xmlString = xmlString.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, "");
+
 		if ( xmlString )
 		{
 			try
@@ -875,5 +887,200 @@ var Utils =
 				return 0;
 			}
 		}
+	},
+
+	/**
+	 * Convert a static TextField element to an equivalent HTML string while preserving the
+	 * formatting information in its textRuns array in the form of <font>, <b> and <i> tags. Any
+	 * line breaks or carriage returns are converted to <br/> tags.
+	 *
+	 * @param p_tf A reference to the static TextField element.
+	 *
+	 * @return HTML String.
+	 */
+	tfToHTML : function(p_tf)
+	{
+		var textRuns = p_tf.textRuns;
+		var html = "";
+
+		for ( var i=0; i<textRuns.length; i++ )
+		{
+			var textRun = textRuns[i];
+			var chars = textRun.characters;
+
+			chars = chars.replace(/\n/g,"<br/>");
+			chars = chars.replace(/\r/g,"<br/>");
+			chars = chars.replace(/  /g," ");
+			chars = chars.replace(/. <br\/>/g,".<br/>");
+
+			var attrs = textRun.textAttrs;
+
+			var face = attrs.face;
+			var size = attrs.size;
+			var bold = attrs.bold;
+			var italic = attrs.italic;
+			var colour = attrs.fillColor;
+
+			if ( bold )
+			{
+				chars = "<b>"+chars+"</b>";
+			}
+
+			if ( italic )
+			{
+				chars = "<i>"+chars+"</i>";
+			}
+
+			chars = "<font size=\""+size+"\" face=\""+face+"\" color=\""+colour+"\">"+chars+"</font>";
+
+			html += chars;
+		}
+
+		return html;
+	},
+
+	/**
+	 * Set the contents of a static TextField via a HTML string. Basic HTML tags like <font>, <b>,
+	 * <i> and <br/> are parsed and applied to the TextField as text attributes at the matching
+	 * string indexes.
+	 *
+	 * @param p_html HTML String.
+	 * @param p_tf A reference to a static TextField element.
+	 *
+	 * @return Void.
+	 */
+	htmlToTF : function(p_html,p_tf)
+	{
+		// Replace <br/> and <br /> with \r carriage returns:
+
+		p_html = p_html.replace(/<br \/>/g,".<br/>");
+		p_html = p_html.replace(/<br\/>/g,"\r");
+
+		// Parse the HTML string with a SAX XML parser. The base tag-less string is built up
+		// incrementally, and each time a <font> tag is encountered a matching attributes
+		// object is created:
+
+		var baseAttrs = p_tf.textRuns[0];
+		var results = [];
+		var resultString = "";
+
+		HTMLParser(p_html,
+		{
+			start : function(p_tag,p_attrs,p_unary )
+			{
+				switch (p_tag)
+				{
+					case "font":
+						var size = getAttrValueByName(p_attrs,"size");
+						var face = getAttrValueByName(p_attrs,"size");
+						var fillColor = getAttrValueByName(p_attrs,"color");
+						results.push(
+						{
+							startIndex : resultString.length,
+							endIndex : 0,
+							size : isNaN(size) ? baseAttrs.size : size,
+							face : !face ? baseAttrs.face : face,
+							fillColor : !fillColor ? baseAttrs.fillColor : fillColor
+						});
+						break;
+					case "b":
+						var prevObj = getLastMember(results);
+						if ( prevObj ) prevObj.bold = true;
+						break;
+					case "i":
+						var prevObj = getLastMember(results);
+						if ( prevObj ) prevObj.italic = true;
+						break;
+					default:
+						Logger.log("Warning, unsupported HTML tag <"+p_tag+"> found in the XML",Logger.WARNING);
+						break;
+				}
+			},
+			chars : function( p_text )
+			{
+				resultString += p_text;
+			},
+			end : function( p_tag )
+			{
+				var prevObj = getLastMember(results);
+				if ( prevObj )
+				{
+					prevObj.endIndex = resultString.length;
+				}
+			}
+		});
+		
+		// Set the contents on the TextField to be the raw tag-less string and then loop through the
+		// constructed array of text attributes objects applying the styles at the proper indexes:
+
+		p_tf.setTextString(resultString);
+
+		for ( var i=0; i<results.length; i++ )
+		{
+			var o = results[i];
+			var start = o.startIndex;
+			var end = o.endIndex;
+
+			p_tf.setTextAttr("face",o.face,start,end);
+			p_tf.setTextAttr("size",o.size,start,end);
+			p_tf.setTextAttr("fillColor",o.fillColor,start,end);
+			p_tf.setTextAttr("bold",o.bold,start,end);
+			p_tf.setTextAttr("italic",o.italic,start,end);
+		}
+
+		// Local util functions:
+
+		function getLastMember(p_array)
+		{
+			if ( p_array.length == 0 )
+			{
+				return null;
+			}
+			else
+			{
+				return p_array[p_array.length-1];
+			}
+		}
+
+		function getAttrValueByName(p_attrs,p_name)
+		{
+			for ( var i=0; i<p_attrs.length; i++ )
+			{
+				if ( p_attrs[i].name == p_name )
+				{
+					return p_attrs[i].value;
+				}
+			}
+
+			return "";
+		}
+
+		function cloneTextAttrs(p_attrs)
+		{
+			var clone = {};
+
+			for ( var i in p_attrs )
+			{
+				clone[i] = p_attrs[i];
+			}
+
+			return clone;
+		}
+	},
+
+	saveXML : function(p_filePath,p_xmlString,p_unEscape,p_addEncoding)
+	{
+		if ( p_unEscape )
+		{
+			p_xmlString = p_xmlString.replace(/&lt;/g,"<");
+			p_xmlString = p_xmlString.replace(/&gt;/g,">");
+		}
+
+		if ( p_addEncoding )
+		{
+			p_xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\r"+p_xmlString;
+		}
+
+		return FLfile.write(p_filePath,p_xmlString);
 	}
 };

@@ -37,6 +37,7 @@ var config =
 	outputXMLFilePath : "", // XML file path to write
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
+	outputHTML : true, // Output the text in the XML as formatted HTML or raw strings.
 	libDir : "" // Static JSFL library directory
 }
 
@@ -61,6 +62,7 @@ FLfile.write(config.lockFilePath,new Date().toString());
 
 fl.runScript(config.libDir+"Utils.jsfl");
 fl.runScript(config.libDir+"Logger.jsfl");
+fl.runScript(config.libDir+"HTMLParser.jsfl");
 fl.runScript(fl.configURI+"JavaScript/ObjectFindAndSelect.jsfl");
 
 // Set more defaults if not supplied by PHP:
@@ -140,22 +142,24 @@ function doProcessAndExport(p_doc)
 		tfObj = translatableTextFields[i];
 
 		var tfElement = tfObj.obj;
+		var translationObj = {id:tfObj.id};
 
-		var translationObj =
+		if ( config.outputHTML )
 		{
-			id : tfObj.id,
-			text : tfElement.getTextString(),
-			font : tfElement.getTextAttr("face"),
-			size : tfElement.getTextAttr("size"),
-			bold : tfElement.getTextAttr("bold"),
-			italic : tfElement.getTextAttr("italic")
+			translationObj.text = "<![CDATA["+Utils.tfToHTML(tfElement)+"]]>";
 		}
+		else
+		{
+			translationObj.text = tfElement.getTextString();
+			translationObj.font = tfElement.getTextAttr("face");
+			translationObj.size = tfElement.getTextAttr("size");
+			translationObj.bold = tfElement.getTextAttr("bold");
+			translationObj.italic = tfElement.getTextAttr("italic");
 
-		// Strip carriage returns and newlines and remove double spaces
-
-		translationObj.text = translationObj.text.replace(/\n/g," ");
-		translationObj.text = translationObj.text.replace(/\r/g," ");
-		translationObj.text = translationObj.text.replace("  "," ");
+			translationObj.text = translationObj.text.replace(/\n/g," ");
+			translationObj.text = translationObj.text.replace(/\r/g," ");
+			translationObj.text = translationObj.text.replace("  "," ");
+		}
 
 		data.push(translationObj);
 	}
@@ -273,10 +277,14 @@ function createXML(p_data)
 		item.appendChild(p_data[i].text);
 
 		item.@id = p_data[i].id;
-		item.@font = p_data[i].font;
-		item.@size = p_data[i].size;
-		item.@bold = p_data[i].bold;
-		item.@italic = p_data[i].italic;
+
+		if ( !config.outputHTML )
+		{
+			item.@font = p_data[i].font;
+			item.@size = p_data[i].size;
+			item.@bold = p_data[i].bold;
+			item.@italic = p_data[i].italic;
+		}
 
 		items.appendChild(item);
 	}
@@ -338,7 +346,7 @@ function go()
 
 	var writeError = false;
 
-	var xmlSaved = FLfile.write(config.outputXMLFilePath,"<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"+xml.toXMLString());
+	var xmlSaved = Utils.saveXML(config.outputXMLFilePath,xml.toXMLString(),true,true);
 
 	if ( xmlSaved )
 	{

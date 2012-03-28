@@ -21,6 +21,7 @@ var config =
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
 	xmlFilePath : "", // XML file path to import
+	parseAsHTML : true,
 	libDir : "" // Static JSFL library directory
 }
 
@@ -47,6 +48,7 @@ FLfile.write(config.lockFilePath,new Date().toString());
 
 fl.runScript(config.libDir+"Utils.jsfl");
 fl.runScript(config.libDir+"Logger.jsfl");
+fl.runScript(config.libDir+"HTMLParser.jsfl");
 fl.runScript(fl.configURI+"JavaScript/ObjectFindAndSelect.jsfl");
 
 // Set more defaults if not supplied by PHP:
@@ -86,18 +88,20 @@ function applyTranslations(p_textFields,p_translationData)
 	{
 		var translationObj = p_translationData.items[i];
 		var tfObj;
+		var foundTF = false;
 
 		for ( var j=0; j<p_textFields.length; j++ )
 		{
 			if ( p_textFields[j].id == translationObj.id )
 			{
+				foundTF = true;
 				tfObj = p_textFields[j];
 
 				break;
 			}
 		}
 
-		if ( tfObj )
+		if ( foundTF )
 		{
 			applyTranslationToTextField(translationObj,tfObj);
 		}
@@ -124,7 +128,16 @@ function applyTranslations(p_textFields,p_translationData)
  */
 function applyTranslationToTextField(p_translationObj,p_tfObj)
 {
-	p_tfObj.obj.setTextString(p_translationObj.text);
+	var text = p_translationObj.text;
+
+	if ( config.parseAsHTML )
+	{
+		Utils.htmlToTF(text,p_tfObj.obj);
+	}
+	else
+	{
+		p_tfObj.obj.setTextString(text);
+	}
 }
 
 /**
@@ -184,6 +197,7 @@ function go()
 
 	var flaSaved = false;
 	var writeError = false;
+	var applySuccess = false;
 
 	// Load the FLA:
 
@@ -251,11 +265,18 @@ function go()
 
 	try
 	{
-		applyTranslations(textFields,translationData);
+		applySuccess = applyTranslations(textFields,translationData);
 	}
 	catch (p_error)
 	{
 		Logger.log("Error applying translation data to FLA. "+p_error,Logger.WARNING);
+
+		return false;
+	}
+
+	if ( !applySuccess )
+	{
+		Logger.log("Error applying translation data to FLA.",Logger.WARNING);
 
 		return false;
 	}
