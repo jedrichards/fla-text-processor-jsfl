@@ -14,6 +14,10 @@
  * Config values are dynamically written in by the system executing the script, or filled with
  * sensible default values if left empty.
  *
+ * If the outputHTML config value is set to true the script will attempt to parse the style
+ * information into HTML tags for inclusion in the XML in CDATA section, or if set to false the text
+ * content is outputted as raw strings.
+ *
  * The processed FLA and XML are then saved to the file paths specified in the config.
  *
  * TODO:
@@ -37,7 +41,7 @@ var config =
 	outputXMLFilePath : "", // XML file path to write
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
-	outputHTML : true, // Output the text in the XML as formatted HTML or raw strings.
+	outputHTML : true, // Output the text in the XML as formatted HTML in CDATA or else raw strings.
 	libDir : "" // Static JSFL library directory
 }
 

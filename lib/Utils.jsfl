@@ -675,7 +675,7 @@ var Utils =
 	{
 		var xmlString = FLfile.read(p_xmlFilePath);
 
-		// E4X can't parse the XML encoding declaration so strip it out
+		// E4X can't handle the XML version and encoding declaration so strip it out if its present:
 
 		xmlString = xmlString.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, "");
 

@@ -39,7 +39,6 @@ if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
 if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"import-test.fla";
 if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"test.xml";
 
-
 // Lock it
 
 FLfile.write(config.lockFilePath,new Date().toString());
