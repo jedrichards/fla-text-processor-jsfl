@@ -56,7 +56,7 @@ var scriptDir = scriptPath.split(scriptName)[0];
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test.fla";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"PP2110_0312_banner_EN_gb_Q1-consumer-printer-promo-Animated-728x90.fla";
 
 // Lock it
 
@@ -334,7 +334,16 @@ function go()
 	}
 	catch (p_error)
 	{
-		Logger.log("Warning failed to tidy the library. "+p_error,Logger.WARNING);
+		Logger.log("Warning, error trying to tidy the library. "+p_error,Logger.WARNING);
+	}
+
+	try
+	{
+		Utils.createTextSheet(doc);	
+	}
+	catch (p_error)
+	{
+		Logger.log("Warning, error trying to create the text sheet MovieClip. "+p_error,Logger.WARNING);
 	}
 
 	try

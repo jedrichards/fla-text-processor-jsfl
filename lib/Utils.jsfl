@@ -200,6 +200,8 @@ var Utils =
 	 */
 	tidyLibrary : function(p_lib,p_doc)
 	{
+		//Logger.log("tidyLib");
+
 		// Create folders:
 
 		var mcFolderName = "movieclips";
@@ -229,17 +231,12 @@ var Utils =
 
 			var destinationFolder;
 
+			//Logger.log(i+" "+item.name+" "+p_lib.getItemType(item.name));
+
 			switch ( p_lib.getItemType(item.name) )
 			{
 				case this.MOVIECLIP_LIB_ITEM:
-					if ( this.isTranslatableLibPathName(item.name) )
-					{
-						 destinationFolder = textMCFolderName;
-					}
-					else
-					{
-						destinationFolder = mcFolderName;
-					}
+					destinationFolder = this.isTranslatableLibPathName(item.name) ? textMCFolderName : mcFolderName;
 					break;
 				case this.GRAPHIC_LIB_ITEM:
 					destinationFolder = graphicsFolderName;
@@ -261,7 +258,11 @@ var Utils =
 					break;
 			}
 
-			p_lib.moveToFolder(destinationFolder,item.name,true);
+			if ( destinationFolder != undefined )
+			{
+				var moveSuccess = p_lib.moveToFolder(destinationFolder,item.name,true);
+				//if ( moveSuccess ) Logger.log("  moved to "+destinationFolder);
+			}
 		}
 
 		p_lib.moveToFolder(textMCFolderName,mcFolderName+"/TranslatableTextMC",true);
@@ -750,6 +751,32 @@ var Utils =
 	},
 
 	/**
+	 * Run through the library and return all items that have a path name in the pattern "tfn".
+	 * Results are returned as an array of objects containing a reference to the item and its id.
+	 *
+	 * @param p_doc A reference to the FLA to search.
+	 *
+	 * @return Array of translatable MovieClips.
+	 */
+	getAllTranslatableMovieClips : function(p_doc)
+	{
+		var library = p_doc.library;
+		var movieClips = [];
+
+		for ( var i=0; i<library.items.length; i++ )
+		{
+			item = library.items[i];
+
+			if ( this.isTranslatableLibPathName(item.name) )
+			{
+				movieClips.push({mc:item,id:this.getIDByLibPathName(item.name),name:item.name});
+			}
+		}
+
+		return movieClips;
+	},
+
+	/**
 	 * Create a sprite-sheet style MovieClip containing all the translatable TextFields used in the
 	 * FLA for easy access to all the TextFields.
 	 *
@@ -762,7 +789,7 @@ var Utils =
 		var sheetName = "TranslatableTextMC";
 		var folderName = "movieclips-text";
 		var fullPath = folderName+"/"+sheetName;
-		var textFields = this.getAllTranslatableTextFields(p_doc);
+		var mcLibItems = this.getAllTranslatableMovieClips(p_doc);
 		var library = p_doc.library;
 
 		// Tidy library and create folder if needed:
@@ -773,14 +800,14 @@ var Utils =
 
 		// Exit function if there are no translatable TextFields present:
 
-		if ( textFields.length == 0 )
+		if ( mcLibItems.length == 0 )
 		{
 			return;
 		}
 
 		// Sort the TextField array by ID so that "tf1" appears at the top of the layers:
 
-		textFields.sort(sortOnID);
+		mcLibItems.sort(sortOnID);
 
 		// Create a new MovieClip in the library and open it for editing:
 
@@ -792,19 +819,16 @@ var Utils =
 		// timeline:
 
 		var holderTimeline = p_doc.getTimeline();
-		var tfHolders = [];
+		var mcElements = [];
 		var i;
 
-		for ( i=0; i<textFields.length; i++ )
+		for ( i=0; i<mcLibItems.length; i++ )
 		{
-			var tfObj = textFields[i];
-			var parent = tfObj.parent;
-			var parentName = tfObj.parent.obj.libraryItem.name;
-			var layerNum = holderTimeline.addNewLayer(tfObj.id);
+			holderTimeline.addNewLayer(mcLibItems[i].id);
 
-			library.addItemToDocument({x:0,y:0},parentName);
+			library.addItemToDocument({x:0,y:0},mcLibItems[i].name);
 
-			tfHolders.push(holderTimeline.layers[0].frames[0].elements[0]);
+			mcElements.push(holderTimeline.layers[0].frames[0].elements[0]);
 		}
 
 		// Delete the empty "Layer 1":
@@ -820,17 +844,15 @@ var Utils =
 		// Layout the TextFields in a rough grid. Sort them by height first so the largest
 		// TextFields appear near the bottom of the grid:
 
-		tfHolders.sort(sortOnHeight);
-
 		var numCols = 3;
 		var padding = 15;
 		var heightArray = [];
 		var xPos = 0;
 		var yPos = 0;
 
-		for ( i=0; i<tfHolders.length; i++ )
+		for ( i=0; i<mcElements.length; i++ )
 		{
-			var element = tfHolders[i];
+			var element = mcElements[i];
 			
 			element.x = xPos;
 			element.y = yPos;
@@ -854,25 +876,6 @@ var Utils =
 		{
 			var aNum = parseInt(p_a.id.split("tf")[1]);
 			var bNum = parseInt(p_b.id.split("tf")[1]);
-
-			if ( aNum > bNum )
-			{
-				return -1;
-			}
-			else if ( aNum < bNum )
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-		
-		function sortOnHeight(p_a,p_b)
-		{
-			var aNum = p_a.height;
-			var bNum = p_b.height;
 
 			if ( aNum > bNum )
 			{
@@ -972,7 +975,7 @@ var Utils =
 				{
 					case "font":
 						var size = getAttrValueByName(p_attrs,"size");
-						var face = getAttrValueByName(p_attrs,"size");
+						var face = getAttrValueByName(p_attrs,"face");
 						var fillColor = getAttrValueByName(p_attrs,"color");
 						results.push(
 						{
