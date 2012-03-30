@@ -17,6 +17,8 @@ In the first step an FLA is taken as input, tidied up, prepared and scanned for 
 - Keep the IDE up to date with the latest updates from Adobe to minimise bugs.
 - JSFL scripts can be executed from the command line in OSX via `open myscript.jsfl`. This will open Flash if it isn't already and run the script.
 - There is no way to pass parameters from the command line into the JSFL script, so an external tool will need to modify the JSFL script directly before it is run if dynamic values need to be passed in.
+- On OSX JSFL scripts understand file paths in the format `file:///absolute/path/to/myfile`.
+- On OSX Flash will expose in its Commands menu any JSFL scripts it finds in the following location `Macintosh\ HD/Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands/`.
 
 ### FLA structure
 
@@ -62,5 +64,5 @@ In the first step an FLA is taken as input, tidied up, prepared and scanned for 
 ### Caveats
 
 - RTL text is not supported. RTL text is only achievable in AS3 FLAs using Text Layout Framework (TLF) TextFields. TLF TextFields are not currently accessible via the JSFL API. Any conversion to RTL will have to be completed in a manual step after importing.
-- TextFields that have been grouped together with other symbols on the stage may be skipped by the script- consider breaking apart any groups containing TextFields in the master file.
+- TextFields that have been grouped together with other symbols on the stage may be skipped by the script - consider breaking apart any groups containing TextFields in the master file.
 - Only static TextFields are considered translatable, dynamic and input TextFields are skipped.
