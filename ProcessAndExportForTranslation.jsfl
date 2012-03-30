@@ -52,7 +52,7 @@ var scriptDir = scriptPath.split(scriptName)[0];
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"process-test.fla";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test-files/process-test.fla";
 
 // Lock it
 

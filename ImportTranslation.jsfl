@@ -36,8 +36,8 @@ var scriptDir = scriptPath.split(scriptName)[0];
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"import-test.fla";
-if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"import-test.xml";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test-files/import-test.fla";
+if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"test-files/import-test.xml";
 
 // Lock it
 
