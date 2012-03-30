@@ -21,7 +21,7 @@ var config =
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
 	xmlFilePath : "", // XML file path to import
-	parseAsHTML : true,
+	parseAsXML : true,
 	libDir : "" // Static JSFL library directory
 }
 
@@ -36,8 +36,8 @@ var scriptDir = scriptPath.split(scriptName)[0];
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"output/2E0090C9-8171-7E46-C552-B12AD93F3986.fla";
-if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"output/2E0090C9-8171-7E46-C552-B12AD93F3986.xml";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"import-test.fla";
+if ( config.xmlFilePath == "" ) config.xmlFilePath = scriptDir+"import-test.xml";
 
 // Lock it
 
@@ -129,9 +129,9 @@ function applyTranslationToTextField(p_translationObj,p_tfObj)
 {
 	var text = p_translationObj.text;
 
-	if ( config.parseAsHTML )
+	if ( config.parseAsXML )
 	{
-		Utils.htmlToTF(text,p_tfObj.obj);
+		Utils.xmlToTF(text,p_tfObj.obj);
 	}
 	else
 	{

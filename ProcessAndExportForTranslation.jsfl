@@ -20,10 +20,6 @@
  *
  * The processed FLA and XML are then saved to the file paths specified in the config.
  *
- * TODO:
- * - Handle dynamic/input TextFields more gracefully?
- * - Test with lots of banners from the wild.
- *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */
 
@@ -41,7 +37,7 @@ var config =
 	outputXMLFilePath : "", // XML file path to write
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
-	outputHTML : true, // Output the text in the XML as formatted HTML in CDATA or else raw strings.
+	outputHTML : true, // Output the text in the XML as formatted HTML or else raw strings.
 	libDir : "" // Static JSFL library directory
 }
 
@@ -56,7 +52,7 @@ var scriptDir = scriptPath.split(scriptName)[0];
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
 if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"PP2110_0312_banner_EN_gb_Q1-consumer-printer-promo-Animated-728x90.fla";
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"process-test.fla";
 
 // Lock it
 
@@ -150,19 +146,18 @@ function doProcessAndExport(p_doc)
 
 		if ( config.outputHTML )
 		{
-			translationObj.text = "<![CDATA["+Utils.tfToHTML(tfElement)+"]]>";
+			translationObj.text = "<![CDATA["+Utils.tfToXML(tfElement)+"]]>";
 		}
 		else
 		{
-			translationObj.text = tfElement.getTextString();
-			translationObj.font = tfElement.getTextAttr("face");
-			translationObj.size = tfElement.getTextAttr("size");
-			translationObj.bold = tfElement.getTextAttr("bold");
-			translationObj.italic = tfElement.getTextAttr("italic");
+			// If we're not outputting HTML we want a clean unformatted string. Strip out any
+			// carriage returns, newlines and replace any sequence of whitespaces with a single
+			// space character:
 
+			translationObj.text = tfElement.getTextString();
 			translationObj.text = translationObj.text.replace(/\n/g," ");
 			translationObj.text = translationObj.text.replace(/\r/g," ");
-			translationObj.text = translationObj.text.replace("  "," ");
+			translationObj.text = translationObj.text.replace(/\s{2,}/g," ");
 		}
 
 		data.push(translationObj);
@@ -279,16 +274,7 @@ function createXML(p_data)
 		var item = <item></item>;
 
 		item.appendChild(p_data[i].text);
-
 		item.@id = p_data[i].id;
-
-		if ( !config.outputHTML )
-		{
-			item.@font = p_data[i].font;
-			item.@size = p_data[i].size;
-			item.@bold = p_data[i].bold;
-			item.@italic = p_data[i].italic;
-		}
 
 		items.appendChild(item);
 	}

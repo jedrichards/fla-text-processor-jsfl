@@ -299,6 +299,10 @@ var Utils =
 			{
 				case this.MOVIECLIP_LIB_ITEM:
 				case this.BUTTON_LIB_ITEM:
+
+					// Bug: linkageExportForAS being incorrectly reported as false in some FLAs
+					// after saving on some machines?
+
 					if ( !item.linkageExportForAS && useCount == 0 && item.name != "movieclips-text/TranslatableTextMC" )
 					{
 						namesForDeletion.push(item.name);
@@ -565,6 +569,16 @@ var Utils =
 		return data;
 	},
 
+	/**
+	 * Returns all static TextFields that appear either on the root timeline or nested in parent
+	 * symbols that also appear on the root timeline. Uses the fl.findObjectInDocByType function
+	 * and filters the results for static TextFields only. Does not find TextFields contained in
+	 * unused MovieClips.
+	 *
+	 * @param p_doc A reference to the document to search.
+	 *
+	 * @return Array of static TextField objects.
+	 */
 	getAllStaticTextFields : function(p_doc)
 	{
 		var results = fl.findObjectInDocByType(this.TEXTFIELD_TIMELINE_ELEMENT,p_doc);
@@ -893,18 +907,44 @@ var Utils =
 	},
 
 	/**
-	 * Convert a static TextField element to an equivalent HTML string while preserving the
-	 * formatting information in its textRuns array in the form of <font>, <b> and <i> tags. Any
-	 * line breaks or carriage returns are converted to <br/> tags.
+	 * Convert a static TextField element to a string while preserving the formatting information in
+	 * its textRuns array into an XML-like structure.
 	 *
 	 * @param p_tf A reference to the static TextField element.
 	 *
-	 * @return HTML String.
+	 * @return XML String.
 	 */
-	tfToHTML : function(p_tf)
+	tfToXML : function(p_tf)
 	{
+		function wrapInTag(p_chars,p_attrs)
+		{
+			var startTag = "<textrun>";
+			var endTag = "</textrun>";
+
+			for ( var attr in p_attrs )
+			{
+				startTag = startTag.replace(/>/," "+attr+"=\""+p_attrs[attr]+"\">");
+			}
+
+			return startTag+p_chars+endTag;
+		}
+
+		function tagAttrsAreIdentical(p_a,p_b)
+		{
+			for ( var attr in p_a )
+			{
+				if ( p_a[attr] != p_b[attr] )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		var textRuns = p_tf.textRuns;
-		var html = "";
+		var textRunTagAttrs = [];
+		var xml = "";
 
 		for ( var i=0; i<textRuns.length; i++ )
 		{
@@ -913,89 +953,90 @@ var Utils =
 
 			chars = chars.replace(/\n/g,"<br/>");
 			chars = chars.replace(/\r/g,"<br/>");
-			chars = chars.replace(/  /g," ");
-			chars = chars.replace(/. <br\/>/g,".<br/>");
 
 			var attrs = textRun.textAttrs;
 
-			var face = attrs.face;
-			var size = attrs.size;
-			var bold = attrs.bold;
-			var italic = attrs.italic;
-			var colour = attrs.fillColor;
-
-			if ( bold )
+			var tagAttrs =
 			{
-				chars = "<b>"+chars+"</b>";
+				face : attrs.face,
+				size : attrs.size,
+				bold : attrs.bold,
+				italic : attrs.italic,
+				colour : attrs.fillColor
 			}
 
-			if ( italic )
+			if ( i > 0 )
 			{
-				chars = "<i>"+chars+"</i>";
+				if ( tagAttrsAreIdentical(tagAttrs,textRunTagAttrs[textRunTagAttrs.length-1]) )
+				{
+					xml = xml.substring(0,xml.length-"</textrun>".length);
+
+					xml += chars+"</textrun>";
+				}
+				else
+				{
+					xml += wrapInTag(chars,tagAttrs);
+				}
+			}
+			else
+			{
+				xml += wrapInTag(chars,tagAttrs);
 			}
 
-			chars = "<font size=\""+size+"\" face=\""+face+"\" color=\""+colour+"\">"+chars+"</font>";
-
-			html += chars;
+			textRunTagAttrs.push(tagAttrs);
 		}
 
-		return html;
+		return xml;
 	},
 
 	/**
-	 * Set the contents of a static TextField via a HTML string. Basic HTML tags like <font>, <b>,
-	 * <i> and <br/> are parsed and applied to the TextField as text attributes at the matching
-	 * string indexes.
+	 * Set the contents of a static TextField via an XML string.
 	 *
-	 * @param p_html HTML String.
+	 * @param p_xml XML String.
 	 * @param p_tf A reference to a static TextField element.
 	 *
 	 * @return Void.
 	 */
-	htmlToTF : function(p_html,p_tf)
+	xmlToTF : function(p_xml,p_tf)
 	{
 		// Replace <br/> and <br /> with \r carriage returns:
 
-		p_html = p_html.replace(/<br \/>/g,".<br/>");
-		p_html = p_html.replace(/<br\/>/g,"\r");
+		p_xml = p_xml.replace(/<br \/>/g,"<br/>");
+		p_xml = p_xml.replace(/<br\/>/g,"\r");
 
-		// Parse the HTML string with a SAX XML parser. The base tag-less string is built up
-		// incrementally, and each time a <font> tag is encountered a matching attributes
+		// Parse the XML string with a SAX XML parser. The base tag-less string is built up
+		// incrementally, and each time a <textrun> tag is encountered a matching attributes
 		// object is created:
 
 		var baseAttrs = p_tf.textRuns[0];
 		var results = [];
 		var resultString = "";
 
-		HTMLParser(p_html,
+		HTMLParser(p_xml,
 		{
 			start : function(p_tag,p_attrs,p_unary )
 			{
 				switch (p_tag)
 				{
-					case "font":
+					case "textrun":
 						var size = getAttrValueByName(p_attrs,"size");
 						var face = getAttrValueByName(p_attrs,"face");
-						var fillColor = getAttrValueByName(p_attrs,"color");
+						var fillColor = getAttrValueByName(p_attrs,"colour");
+						var bold = getAttrValueByName(p_attrs,"bold");
+						var italic = getAttrValueByName(p_attrs,"italic");
 						results.push(
 						{
 							startIndex : resultString.length,
 							endIndex : 0,
 							size : isNaN(size) ? baseAttrs.size : size,
 							face : !face ? baseAttrs.face : face,
-							fillColor : !fillColor ? baseAttrs.fillColor : fillColor
+							fillColor : !fillColor ? baseAttrs.fillColor : fillColor,
+							bold : bold === undefined ? baseAttrs.bold : bold,
+							italic : italic === undefined ? baseAttrs.italic : italic
 						});
 						break;
-					case "b":
-						var prevObj = getLastMember(results);
-						if ( prevObj ) prevObj.bold = true;
-						break;
-					case "i":
-						var prevObj = getLastMember(results);
-						if ( prevObj ) prevObj.italic = true;
-						break;
 					default:
-						Logger.log("Warning, unsupported HTML tag <"+p_tag+"> found in the XML",Logger.WARNING);
+						Logger.log("Warning, unsupported XML tag <"+p_tag+"> found in the XML",Logger.WARNING);
 						break;
 				}
 			},
@@ -1027,8 +1068,8 @@ var Utils =
 			p_tf.setTextAttr("face",o.face,start,end);
 			p_tf.setTextAttr("size",o.size,start,end);
 			p_tf.setTextAttr("fillColor",o.fillColor,start,end);
-			p_tf.setTextAttr("bold",o.bold,start,end);
-			p_tf.setTextAttr("italic",o.italic,start,end);
+			p_tf.setTextAttr("bold",o.bold == "true" ? true : false,start,end);
+			p_tf.setTextAttr("italic",o.italic == "true" ? true : false,start,end);
 		}
 
 		// Local util functions:
@@ -1071,6 +1112,16 @@ var Utils =
 		}
 	},
 
+	/**
+	 * Save an XML file to disk.
+	 *
+	 * @param p_filePath File path to save.
+	 * @param p_xmlString String representing the XML data.
+	 * @param p_unEspace Unescape the string by turning &lt; back into < etc.
+	 * @param p_addEncoding Whether to add the XML version and encoding declaration at the top.
+	 *
+	 * @return Boolean indicating success or failure.
+	 */
 	saveXML : function(p_filePath,p_xmlString,p_unEscape,p_addEncoding)
 	{
 		if ( p_unEscape )
@@ -1085,5 +1136,19 @@ var Utils =
 		}
 
 		return FLfile.write(p_filePath,p_xmlString);
+	},
+
+	/**
+	 * Test to see if a text string contains only numbers and symbols.
+	 *
+	 * @param p_text String to test.
+	 *
+	 * @return Boolean.
+	 */
+	textIsTranslatable : function(p_text)
+	{
+		var regEx = /^[\!\@\#\$\%\^\&\*\(\)\|\\\/\,\.\~\`\-\=\+\_\±\§\"\n\r0-9]*$/;
+
+		return !regEx.test(p_text);
 	}
 };
