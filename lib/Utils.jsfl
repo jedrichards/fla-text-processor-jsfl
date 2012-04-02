@@ -193,16 +193,15 @@ var Utils =
 	 * any empty folders. MovieClips with a zero use count that aren't exported for AS are also
 	 * removed.
 	 *
-	 * @param p_lib A reference to the library object to tidy.
 	 * @param p_doc A reference to the associated FLA document.
 	 *
 	 * @return Void.
 	 */
-	tidyLibrary : function(p_lib,p_doc)
+	tidyLibrary : function(p_doc)
 	{
-		//Logger.log("tidyLib");
-
-		// Create folders:
+		var library = p_doc.library;
+		
+		// Create new folders:
 
 		var mcFolderName = "movieclips";
 		var textMCFolderName = "movieclips-text";
@@ -212,28 +211,26 @@ var Utils =
 		var buttonsFolderName = "buttons";
 		var otherFolderName = "other";
 
-		p_lib.newFolder(mcFolderName);
-		p_lib.newFolder(textMCFolderName);
-		p_lib.newFolder(graphicsFolderName);
-		p_lib.newFolder(bitmapsFolderName);
-		p_lib.newFolder(componentsFolderName);
-		p_lib.newFolder(buttonsFolderName);
-		p_lib.newFolder(otherFolderName);
+		library.newFolder(mcFolderName);
+		library.newFolder(textMCFolderName);
+		library.newFolder(graphicsFolderName);
+		library.newFolder(bitmapsFolderName);
+		library.newFolder(componentsFolderName);
+		library.newFolder(buttonsFolderName);
+		library.newFolder(otherFolderName);
 
-		// Move items to folders depending on their item type:
+		// Move items to folders depending on their type:
 
 		var i;
 		var item;
 
-		for ( i=0; i<p_lib.items.length; i++ )
+		for ( i=0; i<library.items.length; i++ )
 		{
-			item = p_lib.items[i];
+			item = library.items[i];
 
 			var destinationFolder;
 
-			//Logger.log(i+" "+item.name+" "+p_lib.getItemType(item.name));
-
-			switch ( p_lib.getItemType(item.name) )
+			switch ( library.getItemType(item.name) )
 			{
 				case this.MOVIECLIP_LIB_ITEM:
 					destinationFolder = this.isTranslatableLibPathName(item.name) ? textMCFolderName : mcFolderName;
@@ -260,16 +257,15 @@ var Utils =
 
 			if ( destinationFolder != undefined )
 			{
-				var moveSuccess = p_lib.moveToFolder(destinationFolder,item.name,true);
-				//if ( moveSuccess ) Logger.log("  moved to "+destinationFolder);
+				var moveSuccess = library.moveToFolder(destinationFolder,item.name,true);
 			}
 		}
 
-		p_lib.moveToFolder(textMCFolderName,mcFolderName+"/TranslatableTextMC",true);
+		library.moveToFolder(textMCFolderName,mcFolderName+"/TranslatableTextMC",true);
 
 		// Clean up any empty folders:
 
-		this.deleteEmptyLibFolders(p_lib);
+		this.deleteEmptyLibFolders(library);
 
 		// Clean up any MovieClips that have a zero use count and aren't exported for AS:
 
@@ -692,7 +688,7 @@ var Utils =
 
 		// E4X can't handle the XML version and encoding declaration so strip it out if its present:
 
-		xmlString = xmlString.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/, "");
+		xmlString = xmlString.replace(/^<\?xml\s+version\s*=\s*(["'])[^\1]+\1[^?]*\?>/,"");
 
 		if ( xmlString )
 		{
