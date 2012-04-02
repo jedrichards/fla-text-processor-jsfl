@@ -21,7 +21,7 @@ var config =
 	outputFLAFilePath : "", // FLA file path to write
 	outputSWFFilePath : "", // SWF file path to write
 	xmlFilePath : "", // XML file path to import
-	parseAsXML : true,
+	importFormattedText : true,
 	libDir : "" // Static JSFL library directory
 }
 
@@ -129,7 +129,7 @@ function applyTranslationToTextField(p_translationObj,p_tfObj)
 {
 	var text = p_translationObj.text;
 
-	if ( config.parseAsXML )
+	if ( config.importFormattedText )
 	{
 		Utils.xmlToTF(text,p_tfObj.obj);
 	}
