@@ -1,24 +1,5 @@
 /**
- * ProcessAndExportForTranslation
- *
- * Takes an FLA as input and generates an XML file containing the text content ready for
- * translation. Static TextFields in a properly prepared FLA should each be wrapped in a MovieClip
- * named "tf1", "tf2" ... "tfn" in the library. The "tfn" library name becomes the text content's ID
- * in the XML file.
- * 
- * If any static TextFields are found in the FLA placed directly on the root timeline or on a
- * keyframe in a arbitrary MovieClip then this script will dynamically wrap such TextFields in an
- * appropriately named MovieClip before generating the XML. Dynamic and input TextFields are not
- * supported.
- *
- * Config values are dynamically written in by the system executing the script, or filled with
- * sensible default values if left empty.
- *
- * If the outputFormattedText config value is set to true the script will attempt to parse the style
- * information into HTML tags for inclusion in the XML in CDATA section, or if set to false the text
- * content is outputted as raw strings.
- *
- * The processed FLA and XML are then saved to the file paths specified in the config.
+ * ProcessFLATemplate
  *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */
@@ -51,8 +32,8 @@ var scriptDir = scriptPath.split(scriptName)[0];
 
 if ( config.logFilePath == "" ) config.logFilePath = scriptDir+"log";
 if ( config.lockFilePath == "" ) config.lockFilePath = scriptDir+"lock";
-if ( config.libDir == "" ) config.libDir = scriptDir+"lib/";
-if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"test-files/process-test.fla";
+if ( config.libDir == "" ) config.libDir = scriptDir;
+if ( config.flaFilePath == "" ) config.flaFilePath = scriptDir+"../test-files/process-test.fla";
 
 // Lock it
 
