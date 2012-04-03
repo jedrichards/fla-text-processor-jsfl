@@ -1,5 +1,9 @@
 /**
- * ProcessFLATemplate
+ * ProcessFLATemplate.jsfl
+ *
+ * Uses the functionality of Processor.jsfl to prepare an FLA for translation and generate the
+ * translation XML. This script is designed to be used as a template by an external system. The
+ * config values can be dynamically populated before the script is called.
  *
  * @author JedR, Seisaku Ltd <jed@seisaku.co.uk>
  */

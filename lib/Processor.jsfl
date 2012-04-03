@@ -1,5 +1,7 @@
 /**
- * Processor
+ * Processor.jsfl
+ *
+ * Not for direct use, these methods are called by other scripts.
  *
  * Takes an FLA as input and generates an XML file containing the text content ready for
  * translation. Static TextFields in a properly prepared FLA should each be wrapped in a MovieClip
@@ -12,7 +14,7 @@
  * supported.
  *
  * If the outputFormattedText value is set to true the script will attempt to parse the style
- * information into HTML tags for inclusion in the XML in CDATA section, or if set to false the text
+ * information into XML tags for inclusion in the XML in CDATA sections, or if set to false the text
  * content is outputted as raw strings.
  *
  * The processed FLA and XML are then saved to the file paths specified.
@@ -43,11 +45,11 @@ Processor =
 
 		if ( typeof(p_doc) == "string" )
 		{
-			doc = Utils.loadFLA(this.config.flaFilePath);
+			doc = Utils.loadFLA(p_doc);
 		}
 		else
 		{
-			var doc = fl.getDocumentDOM();
+			doc = p_doc;
 		}
 
 		if ( !doc )

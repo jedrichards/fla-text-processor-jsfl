@@ -1,5 +1,5 @@
 /**
- * ProcessCurrentFLA
+ * ProcessCurrentFLA.jsfl
  *
  * Uses the functionality of Processor.jsfl to prepare the currently open FLA for translation and
  * generate the translation XML.
@@ -26,7 +26,6 @@ var scriptPath = fl.scriptURI;
 var scriptPathParts = scriptPath.split("/");
 var scriptName = scriptPathParts[scriptPathParts.length-1];
 var scriptDir = scriptPath.split(scriptName)[0];
-var doc = fl.getDocumentDOM();
 
 config.libDir = scriptDir+"lib/";
 
@@ -38,14 +37,13 @@ fl.runScript(config.libDir+"HTMLParser.jsfl");
 fl.runScript(config.libDir+"Processor.jsfl");
 fl.runScript(fl.configURI+"JavaScript/ObjectFindAndSelect.jsfl");
 
-// Get user input for language code and output folder:
+// Get user input for language code and output folder etc.:
 
+config.outputFormattedText = confirm("Generate XML with text formatting data?");
 config.lang = prompt("Enter the language code",config.lang);
 config.outputFolder = fl.browseForFolderURL("Select the output folder");
 
-// Set more config options based on input:
-
-var outputFileName = doc.name+"_"+config.lang;
+var outputFileName = fl.getDocumentDOM().name+"_"+config.lang;
 outputFileName = outputFileName.replace(/\.fla/ig,"")
 var outputFilePath = config.outputFolder+"/"+outputFileName;
 
@@ -57,7 +55,7 @@ config.outputSWFFilePath = outputFilePath+".swf";
 
 Utils.initLogger(config,scriptName);
 
-var success = Processor.go(doc,config,false);
+var success = Processor.go(fl.getDocumentDOM(),config,false);
 
 if ( success )
 {
