@@ -14,7 +14,6 @@ This repo contains the commands `ProcessCurrentFLA` and `ImportXMLToCurrentFLA` 
 
 To install into Flash CS5.5 on OSX run the following commands in Terminal replacing {username} with the correct value for your user account:
 
-
 `cd /Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands`
 `git clone git://github.com/jedrichards/HogarthAutomationJSFL.git`
 
