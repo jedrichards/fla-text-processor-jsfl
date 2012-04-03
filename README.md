@@ -8,6 +8,16 @@ The JSFL scripts run within the Flash IDE environment and operate on FLAs. They 
 
 In the first step an FLA is taken as input, tidied up, prepared and scanned for translatable text which is outputted as XML. The XML can then be translated by a 3rd party and finally imported back into the FLA.
 
+This repo contains the commands `ProcessCurrentFLA` and `ImportXMLToCurrentFLA` which can be run within the IDE plus templatable JSFLs for use within another system.
+
+## Installation
+
+To install into Flash CS5.5 on OSX run the following one-line command in Terminal replacing {username} with the correct value for your user account:
+
+`git clone git://github.com/jedrichards/HogarthAutomationJSFL.git /Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands2/HogarthAutomationJSFL`
+
+The scripts should not be available from Flash's Commands menu. Keep updated by executing `git pull` in the installation directory.
+
 ## Considerations
 
 ### Environment
@@ -18,7 +28,7 @@ In the first step an FLA is taken as input, tidied up, prepared and scanned for 
 - JSFL scripts can be executed from the command line in OSX via `open myscript.jsfl`. This will open Flash if it isn't already and run the script.
 - There is no way to pass parameters from the command line into the JSFL script, so an external tool will need to modify the JSFL script directly before it is run if dynamic values need to be passed in.
 - On OSX JSFL scripts understand file paths in the format `file:///absolute/path/to/myfile`.
-- On OSX Flash will expose in its Commands menu any JSFL scripts it finds in the following location `Macintosh\ HD/Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands/`.
+- On OSX Flash will expose in its Commands menu any JSFL scripts it finds in the following location `/Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands`.
 
 ### FLA structure
 
