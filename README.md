@@ -1,14 +1,14 @@
-# HogarthAutomationJSFL
+# FLA Text Processor JSFL
 
-JSFL scripts for automating the processing of banner FLAs for translation.
+JSFL scripts for extracting and importing text into FLAs via XML. Designed to be of use during the localisation of static Flash assets and movies, for example advertising banners.
 
 ## Outline
 
-The JSFL scripts run within the Flash IDE environment and operate on FLAs. They are also capable of parsing and outputting XML and publishing SWFs.
+The JSFL scripts run within the Flash IDE environment and operate on FLAs. They are capable of parsing and outputting XML and publishing SWFs.
 
 In the first step an FLA is taken as input, tidied up, prepared and scanned for translatable text which is outputted as XML. The XML can then be translated by a 3rd party and finally imported back into the FLA.
 
-This repo contains the commands `ProcessCurrentFLA` and `ImportXMLToCurrentFLA` which can be run within the IDE plus templatable JSFLs for use within another system.
+This repo contains the commands `ProcessCurrentFLA` and `ImportXMLToCurrentFLA` which can be run within the IDE.
 
 ## Installation
 
@@ -17,7 +17,7 @@ To install into Flash CS5.5 on OSX run the following commands in Terminal replac
 `cd /Users/{username}/Library/Application\ Support/Adobe/Flash\ CS5.5/en_US/Configuration/Commands`
 `git clone git://github.com/jedrichards/HogarthAutomationJSFL.git`
 
-The scripts should not be available from Flash's Commands menu. Keep updated by executing `git pull` in the installation directory.
+The scripts should now be available from Flash's Commands menu. Keep updated by executing `git pull` in the installation directory.
 
 ## Considerations
 
